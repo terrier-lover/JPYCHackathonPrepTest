@@ -1,0 +1,11 @@
+.env
+
+# Hardhat files
+hardhat/.env
+hardhat/.openzeppelin
+hardhat/node_modules
+hardhat/coverage
+hardhat/coverage.json
+hardhat/typechain
+hardhat/cache
+hardhat/artifacts
