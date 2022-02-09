@@ -13,13 +13,13 @@ async function main() {
   const [owner] = await ethers.getSigners();
   console.log('operating owner', owner.address);
 
-  const JPYCQuizRewardNFT = (
-      await upgrades.deployProxy(
-          new JPYCQuizRewardNFTFactory(owner),
-          ["JPYC Hackathon NFT", "JPYCHACKNFT"],
-          { initializer: 'initialize(string,string)' }
-      )
-  ) as JPYCQuizRewardNFTType;
+  const JPYCQuizRewardNFT = await (
+    new JPYCQuizRewardNFTFactory(owner).deploy(
+      "JPYC Hackathon NFT",
+      "JPYCHACK",
+      "0x0000000000000000000000000000000000000000"
+    )
+  );    
   await JPYCQuizRewardNFT.deployed();
   console.log('JPYCQuizRewardNFT address', JPYCQuizRewardNFT.address);
 

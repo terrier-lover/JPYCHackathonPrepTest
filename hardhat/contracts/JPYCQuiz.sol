@@ -6,42 +6,30 @@ import {SafeMathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/mat
 import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 contract JPYCQuiz is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
-    event LogQuizEventID(uint256 indexed eventQuizId_);
-
-    event LogQuizQuestionID(
-        uint256 indexed questionId_,
-        uint256 indexed quizEventId_
-    );
-
-    event LogUserAnswer(
-        address indexed userAddress_,
-        uint256 indexed quizEventID_,
-        bool hasPassed_
-    );
-
-    event LogMintReward(
-        address indexed userAddress_,
-        uint256 indexed quizEventID_
-    );
+    event LogSetQuestionInfo(uint256 indexed questionId_);
+    event LogUserAnswer(address indexed userAddress_, bool hasPassed_);
+    event LogMintReward(address indexed userAddress_, bool isAdmin);
 
     struct QuestionInfo {
-        uint256 questionID;
+        uint256 questionID; // QuestionID starts with 1
         string question;
         string[] selectionLabels;
         string[] selectionIDs;
-        bool useUniqueSelectionID;
         string solutionHash; // Store solution in a hash format
     }
 
     struct QuizEvent {
-        uint256 quizEventID;
         string quizName;
         uint256 minNumOfPasses; // If correct answers surpass minimumNumOfPasses, user can pass the quiz.
         QuestionInfo[] questionsInfo;
+        bool quizEnded;
+        uint256 versionID; // Increment this value when updating the quiz
     }
 
     struct UserAnswerHistory {
@@ -54,20 +42,109 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         string[] hashes; // Store answers in a hash format
     }
 
-    // 1st Map: key=an address of user, value=2nd Map
-    // 2nd Map: key=quizEventID, value=UserAnswerHistory
-    mapping(
-        address => mapping(uint256 => UserAnswerHistory)
-    ) _userAndAnserStatusMap;
-    QuizEvent[] public _quizEvents;
+    // key = an address of user, value = answer history of user
+    mapping(address => UserAnswerHistory) _userAnserStatusMap;
+    QuizEvent public _quizEvent;
     address public _mintRewardContract;
+    CountersUpgradeable.Counter private _eventVersionID;
 
     function initialize(address mintRewardContract_) public initializer {
         _mintRewardContract = mintRewardContract_;
         __Ownable_init();
     }
 
-    function addQuizEventAndQuestionsSkelton(
+    function getQuizEvent()
+        public
+        view
+        returns (
+            string memory quizName, 
+            uint256 numOfQuestions,
+            uint256 minNumOfPasses,
+            bool quizEnded
+        )
+    {
+        quizName = _quizEvent.quizName;
+        numOfQuestions = _quizEvent.questionsInfo.length;
+        minNumOfPasses = _quizEvent.minNumOfPasses;
+        quizEnded = _quizEvent.quizEnded;
+    }
+
+    function getQuestionInfo(uint256 questionID_)
+        public
+        view
+        returns (string[] memory selectionLabels, string[] memory selectionIDs)
+    {
+        QuestionInfo memory questionInfo = _quizEvent.questionsInfo[
+            questionID_
+        ];
+        selectionLabels = questionInfo.selectionLabels;
+        selectionIDs = questionInfo.selectionIDs;
+    }
+
+    function compareStrings(string memory a_, string memory b_)
+        private
+        pure
+        returns (bool)
+    {
+        return
+            keccak256(abi.encodePacked(a_)) == keccak256(abi.encodePacked(b_));
+    }
+
+    function mintReward() private {
+        AddressUpgradeable.functionCall(
+            _mintRewardContract,
+            abi.encodeWithSignature("mint(address)", msg.sender)
+        );
+
+        emit LogMintReward(msg.sender, true);
+    }
+
+    function ownerMintRewardBypassCheck() public onlyOwner {
+        AddressUpgradeable.functionCall(
+            _mintRewardContract,
+            abi.encodeWithSignature("mint(address)", msg.sender)
+        );
+
+        emit LogMintReward(msg.sender, true);
+    }
+
+    function setMintRewardContract(address mintRewardContract_)
+        public
+        onlyOwner
+    {
+        _mintRewardContract = mintRewardContract_;
+    }
+
+    function setQuestionInfo(
+        uint256 questionID_,
+        string[] memory selectionLabels_,
+        string[] memory selectionIDs_,
+        string memory solutionHash_
+    ) public onlyOwner {
+        QuestionInfo storage questionInfo = _quizEvent.questionsInfo[
+            questionID_
+        ];
+        uint256 selectionSize = selectionLabels_.length;
+        require(
+            selectionIDs_.length == selectionSize,
+            "Number of IDs and labels do not match"
+        );
+
+        questionInfo.selectionLabels = selectionLabels_;
+        questionInfo.solutionHash = solutionHash_;
+        questionInfo.selectionIDs = selectionIDs_;
+
+        emit LogSetQuestionInfo(questionID_);
+    }
+
+    function setQuestionStatement(uint256 questionID_, string memory question_)
+        public
+        onlyOwner
+    {
+        _quizEvent.questionsInfo[questionID_].question = question_;
+    }
+
+    function setQuizEventAndQuestionsSkelton(
         string memory quizName_,
         string[] memory questions_,
         uint256 minNumOfPasses_
@@ -77,171 +154,61 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
             sentNumOfQuestions
         );
         for (uint256 i = 0; i < sentNumOfQuestions; i = i.add(1)) {
-            questionsInfo[i].questionID = i;
+            questionsInfo[i].questionID = i + 1;
             questionsInfo[i].question = questions_[i];
         }
 
-        uint256 currentNumOfEvents = _quizEvents.length;
-
-        _quizEvents.push();
-        _quizEvents[currentNumOfEvents].quizName = quizName_;
-        _quizEvents[currentNumOfEvents].minNumOfPasses = minNumOfPasses_;
+        _quizEvent.quizName = quizName_;
+        _quizEvent.minNumOfPasses = minNumOfPasses_;
+        _eventVersionID.increment();
+        _quizEvent.versionID = _eventVersionID.current();
         for (uint256 i = 0; i < sentNumOfQuestions; i = i.add(1)) {
-            _quizEvents[currentNumOfEvents].quizEventID = i;
-            _quizEvents[currentNumOfEvents].questionsInfo.push();
-            _quizEvents[currentNumOfEvents].questionsInfo[i] = questionsInfo[i];
-        }
-
-        emit LogQuizEventID(currentNumOfEvents);
-    }
-
-    function getAllQuizEvents()
-        public
-        view
-        returns (
-            uint256[] memory quizEventIDs,
-            string[] memory quizNames,
-            uint256[] memory numOfQuestions
-        )
-    {
-        uint256 quizEventsLength = _quizEvents.length;
-        quizEventIDs = new uint256[](quizEventsLength);
-        quizNames = new string[](quizEventsLength);
-        numOfQuestions = new uint256[](quizEventsLength);
-
-        for (uint256 i = 0; i < quizEventsLength; i = i.add(1)) {
-            quizEventIDs[i] = _quizEvents[i].quizEventID;
-            quizNames[i] = _quizEvents[i].quizName;
-            numOfQuestions[i] = _quizEvents[i].questionsInfo.length;
+            _quizEvent.questionsInfo.push();
+            _quizEvent.questionsInfo[i] = questionsInfo[i];
         }
     }
 
-    function getSingleQuizEvent(uint256 quizEventID_)
-        public
-        view
-        returns (
-            string memory quizName,
-            string[] memory questions,
-            uint256[] memory questionIDs
-        )
-    {
-        QuizEvent memory quizEvent = _quizEvents[quizEventID_];
-
-        quizName = quizEvent.quizName;
-
-        QuestionInfo[] memory questionsInfo = quizEvent.questionsInfo;
-        uint256 questionsSize = questionsInfo.length;
-        questions = new string[](questionsSize);
-        questionIDs = new uint256[](questionsSize);
-        for (uint256 i = 0; i < questionsSize; i = i.add(1)) {
-            questions[i] = questionsInfo[i].question;
-            questionIDs[i] = questionsInfo[i].questionID;
-        }
-    }
-
-    function setQuestionInfo(
-        uint256 quizEventID_,
-        uint256 questionID_,
-        string[] memory selectionLabels_,
-        string[] memory selectionIDs_,
-        string memory solutionHash_
-    ) public onlyOwner {
-        QuestionInfo storage questionInfo = _quizEvents[quizEventID_]
-            .questionsInfo[questionID_];
-        uint256 selectionSize = selectionLabels_.length;
-        bool useUniqueSelectionID = selectionSize == selectionIDs_.length;
-
-        questionInfo.selectionLabels = selectionLabels_;
-        questionInfo.useUniqueSelectionID = useUniqueSelectionID;
-        questionInfo.solutionHash = solutionHash_;
-
-        if (useUniqueSelectionID) {
-            questionInfo.selectionIDs = selectionIDs_;
-        } else {
-            for (uint256 i = 0; i < selectionSize; i = i.add(1)) {
-                questionInfo.selectionIDs.push(StringsUpgradeable.toString(i));
-            }
-        }
-
-        emit LogQuizQuestionID(questionID_, quizEventID_);
-    }
-
-    function getQuestionInfo(uint256 quizEventID_, uint256 questionID_)
-        public
-        view
-        returns (string[] memory selectionLabels, string[] memory selectionIDs)
-    {
-        QuestionInfo memory questionInfo = _quizEvents[quizEventID_]
-            .questionsInfo[questionID_];
-        selectionLabels = questionInfo.selectionLabels;
-        selectionIDs = questionInfo.selectionIDs;
-    }
-
-    function setUserAnswerHashes(
-        uint256 quizEventID_,
-        string[] memory answerHashes_
-    ) public onlyOwner {
-        UserAnswerHistory storage history = _userAndAnserStatusMap[msg.sender][
-            quizEventID_
-        ];
-        QuizEvent memory quizEvent = _quizEvents[quizEventID_];
-
+    function setUserAnswerHashes(string[] memory answerHashes_) public {
         require(
-            answerHashes_.length == quizEvent.questionsInfo.length,
+            answerHashes_.length == _quizEvent.questionsInfo.length,
             "Not enough answers"
         );
+
+        UserAnswerHistory storage history = _userAnserStatusMap[msg.sender];
 
         uint256 numOfCorrectAnswers = 0;
         for (uint256 i = 0; i < answerHashes_.length; i = i.add(1)) {
             if (
                 compareStrings(
                     answerHashes_[i],
-                    quizEvent.questionsInfo[i].solutionHash
+                    _quizEvent.questionsInfo[i].solutionHash
                 )
             ) {
                 numOfCorrectAnswers = numOfCorrectAnswers.add(1);
             }
         }
 
-        bool hasPassed = numOfCorrectAnswers >= quizEvent.minNumOfPasses;
+        bool hasPassed = numOfCorrectAnswers >= _quizEvent.minNumOfPasses;
         if (hasPassed) {
-            mintReward(quizEventID_);
+            mintReward();
         }
 
         history.answers.push(
             UserAnswer({hasPassed: hasPassed, hashes: answerHashes_})
         );
 
-        emit LogUserAnswer(msg.sender, quizEventID_, hasPassed);
+        emit LogUserAnswer(msg.sender, hasPassed);
     }
 
-    function compareStrings(string memory a_, string memory b_)
-        private
-        pure
-        returns (bool)
-    {
-        return keccak256(abi.encodePacked(a_)) == keccak256(abi.encodePacked(b_));
+    function setQuizEnd(bool quizEnded_) public onlyOwner {
+        _quizEvent.quizEnded = quizEnded_;
     }
 
-    function mintReward(uint256 quizEventID_) private {
-        AddressUpgradeable.functionCall(
-            _mintRewardContract, 
-            abi.encodeWithSignature("mint(address)", msg.sender)
-        );
-
-        emit LogMintReward(msg.sender, quizEventID_);
+    function setQuizName(string memory quizName_) public onlyOwner {
+        _quizEvent.quizName = quizName_;
     }
 
-    function ownerMintRewardBypassCheck() public onlyOwner {
-        AddressUpgradeable.functionCall(
-            _mintRewardContract, 
-            abi.encodeWithSignature("mint(address)", msg.sender)
-        );
-
-        emit LogMintReward(msg.sender, 0);
-    }
-
-    function setMintRewardContract(address mintRewardContract_) public onlyOwner {
-        _mintRewardContract = mintRewardContract_;
+    function setMinNumOfPasses(uint256 minNumOfPasses_) public onlyOwner {
+        _quizEvent.minNumOfPasses = minNumOfPasses_;
     }
 }
