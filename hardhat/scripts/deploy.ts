@@ -15,8 +15,8 @@ async function main() {
 
   const JPYCQuizRewardNFT = await (
     new JPYCQuizRewardNFTFactory(owner).deploy(
-      "JPYC Hackathon NFT",
-      "JPYCHACK",
+      "TEST NFT",
+      "TEST_HACK",
       "0x0000000000000000000000000000000000000000"
     )
   );    

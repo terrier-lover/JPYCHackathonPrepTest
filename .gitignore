@@ -9,3 +9,8 @@ hardhat/coverage.json
 hardhat/typechain
 hardhat/cache
 hardhat/artifacts
+
+# Frontend files
+frontend/.env
+frontend/build
+frontend/node_modules
