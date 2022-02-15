@@ -37,6 +37,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         UserAnswer[] answers;
     }
 
+    // TODO: Should add versionID in case owner updates the quiz itself.
     struct UserAnswer {
         bool hasPassed;
         string[] hashes; // Store answers in a hash format
@@ -75,7 +76,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         returns (string[] memory selectionLabels, string[] memory selectionIDs)
     {
         QuestionInfo memory questionInfo = _quizEvent.questionsInfo[
-            questionID_
+            questionID_.sub(1)
         ];
         selectionLabels = questionInfo.selectionLabels;
         selectionIDs = questionInfo.selectionIDs;
@@ -122,7 +123,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         string memory solutionHash_
     ) public onlyOwner {
         QuestionInfo storage questionInfo = _quizEvent.questionsInfo[
-            questionID_
+            questionID_.sub(1)
         ];
         uint256 selectionSize = selectionLabels_.length;
         require(
@@ -141,7 +142,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         public
         onlyOwner
     {
-        _quizEvent.questionsInfo[questionID_].question = question_;
+        _quizEvent.questionsInfo[questionID_.sub(1)].question = question_;
     }
 
     function setQuizEventAndQuestionsSkelton(
@@ -168,6 +169,10 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         }
     }
 
+    function getIsUserPassed() public view returns(bool) {
+        return _userAnserStatusMap[msg.sender].hasSentCorrectAnswer;
+    }
+
     function setUserAnswerHashes(string[] memory answerHashes_) public {
         require(
             answerHashes_.length == _quizEvent.questionsInfo.length,
@@ -191,6 +196,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         bool hasPassed = numOfCorrectAnswers >= _quizEvent.minNumOfPasses;
         if (hasPassed) {
             mintReward();
+            history.hasSentCorrectAnswer = hasPassed;
         }
 
         history.answers.push(

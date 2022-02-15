@@ -12,6 +12,7 @@ import {
   JPYCQuiz__factory as JPYCQuizFactory,
   JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
 } from '../typechain';
+import { getSha256Hash } from '../utils/QuizUtils';
 
 describe("JPYCQuiz", function () {
   let JPYCQuiz: JPYCQuizType;
@@ -25,7 +26,7 @@ describe("JPYCQuiz", function () {
       new JPYCQuizRewardNFTFactory(owner).deploy(
         "JPYC Hackathon NFT",
         "JPYCHACK",
-        "0x0000000000000000000000000000000000000000"
+        ethers.constants.AddressZero
       )
     );
     await JPYCQuizRewardNFT.deployed();
@@ -88,18 +89,18 @@ describe("JPYCQuiz", function () {
       const setQuestions = questionSelections.map(
         async (selection, index) => {
           const tx = await JPYCQuiz.setQuestionInfo(
-            index,
+            index + 1,
             selection.selectionLabels,
             selection.selectionIDs,
             selection.solutionHash
           );
-          tx.wait();
+          await tx.wait();
         }
       );
       await Promise.all(setQuestions);
 
-      const questionInfo1 = await JPYCQuiz.connect(quizTaker1).getQuestionInfo(0);
-      const questionInfo2 = await JPYCQuiz.connect(quizTaker1).getQuestionInfo(1);
+      const questionInfo1 = await JPYCQuiz.connect(quizTaker1).getQuestionInfo(1);
+      const questionInfo2 = await JPYCQuiz.connect(quizTaker1).getQuestionInfo(2);
 
       const answerHashes = [
         getSha256Hash(questionInfo1.selectionIDs[0]),
@@ -109,18 +110,13 @@ describe("JPYCQuiz", function () {
         .to.emit(JPYCQuiz, 'LogUserAnswer')
         .withArgs(quizTaker1.address, true);
 
-        // const uri = await JPYCQuizRewardNFT.tokenURI(tokenID);
-        // console.log('uri', uri);
-      
-        // const nftOwner = await JPYCQuizRewardNFT.ownerOf(tokenID);      
+      const mintedTokenID = (
+        await JPYCQuizRewardNFT.getTokenIDFromMinter(quizTaker1.address)
+      ).toNumber();
 
+      expect(mintedTokenID).to.equals(1);
+      const actualQuizTakerAddress = await JPYCQuizRewardNFT.ownerOf(mintedTokenID);
+      expect(actualQuizTakerAddress).to.equals(quizTaker1.address);
     });
-
   });
 });
-
-function getSha256Hash(str: string) {
-  return ethers.utils.sha256(
-    ethers.utils.formatBytes32String(str)
-  );
-}

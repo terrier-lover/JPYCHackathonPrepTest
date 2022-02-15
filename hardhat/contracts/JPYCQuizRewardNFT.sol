@@ -23,6 +23,10 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         _mintRewardCaller = mintRewardCaller_;
     }
 
+    function getTokenIDFromMinter(address minter_) public view returns(uint256) {
+        return originalMinterToTokenIDMap[minter_];
+    }
+
     function mint(address destination_) public {
         require(_msgSender() == _mintRewardCaller, "Invalid caller");
 

@@ -7,9 +7,8 @@ export default function CertificationCard() {
             <img
                 src={Card}
                 style={{
-                    width: 270,
+                    width: "270px",
                     display: "block",
-                    paddingRight: "20px"
                 }}
                 alt="CertificationCard"
             />
@@ -19,7 +18,7 @@ export default function CertificationCard() {
                 left="15px" 
                 height='30px' 
                 width='50px'
-                bg="tomato"
+                bgGradient="linear(to-r, #865325, #b3671f)"
                 borderRadius="10px"
             >
                 <Text color="white" fontWeight="bold" fontSize="xl">見本</Text>

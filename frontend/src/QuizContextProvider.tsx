@@ -1,3 +1,4 @@
+import { usePrevious } from "@chakra-ui/react";
 import nullthrows from "nullthrows";
 import {
     createContext,
@@ -22,8 +23,10 @@ export type QuestionType = {
 
 interface QuizContextDataType {
     currentQuestionID: number,
+    previousQuestionID: number,
     currentQuizState: QuizState,
     questions: QuestionType[],
+    questionSize: number,
     answers: AnswerType[],
     isSolved: boolean,
     setAnswer: (newAnswer: AnswerType) => void,
@@ -39,6 +42,8 @@ const QuizContext =
         quizContextDefaultValue,
     );
 
+const DEFAULT_QUESTION_ID = 0;
+
 function QuizContextProvider({
     questions,
     answers: rawAnswers,
@@ -49,7 +54,11 @@ function QuizContextProvider({
     isSolved: boolean,
 }) {
     const [answers, setAnswers] = useState(rawAnswers);
-    const [currentQuestionID, rawSetCurrentQuestionID] = useState<number>(0);
+    const [currentQuestionID, rawSetCurrentQuestionID] = useState<number>(
+        DEFAULT_QUESTION_ID
+    );
+    const previousQuestionID = usePrevious(currentQuestionID);
+
     const [currentQuizState, rawSetCurrentQuizState] = useState(QuizState.TOP);
 
     const isSolved = rawIsSolved || currentQuizState === QuizState.COMPLETED;
@@ -80,9 +89,11 @@ function QuizContextProvider({
     return (
         <QuizContext.Provider value={{
             questions,
+            questionSize: questions.length,
             currentQuizState,
             answers,
             currentQuestionID,
+            previousQuestionID,
             isSolved,
             setAnswer,
             setCurrentQuestionID,
@@ -106,4 +117,5 @@ export {
     QuizContextProvider,
     QuizContext,
     useQuizContext,
+    DEFAULT_QUESTION_ID,
 };

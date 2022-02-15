@@ -3,9 +3,10 @@ import { useQuizContext } from "./QuizContextProvider";
 import QuizState from "./QuizState";
 import QuizTop from "./QuizTop";
 import { motion, AnimatePresence } from 'framer-motion'
-import { ReactNode } from "react";
+import QuizQuestion from "./QuizQuestion";
+import QuizCompleted from "./QuizCompleted";
 
-const cardVariants = {
+const CARD_ANIMATION_VARIANTS = {
     initial: {
         opacity: 0
     },
@@ -22,7 +23,7 @@ const cardVariants = {
         opacity: 0,
         transition: {
             opacity: {
-                duration: 0.4
+                duration: 0.4,
             }
         }
     }
@@ -31,59 +32,37 @@ const cardVariants = {
 export default function QuizComponent() {
     const { currentQuizState } = useQuizContext();
 
-    const quizInfo = [
-        {
-            quizState: QuizState.TOP,
-            component: <QuizTop />,
-        },
-        {
-            quizState: QuizState.QUESTIONS,
-            component: <>questions</>,
-        },
-        {
-            quizState: QuizState.COMPLETED,
-            component: <>completed</>,
-        }
-    ];
+    let component;
+    switch (currentQuizState) {
+        case QuizState.TOP:
+            component = <QuizTop />;
+            break;
+        case QuizState.QUESTIONS:
+            component = <QuizQuestion />;
+            break;
+        case QuizState.COMPLETED:
+            component = <QuizCompleted />;
+            break;
+    }
 
     return (
         <>
             <Navigation />
-            {quizInfo.map(
-                quiz => <AnimatedQuizComponents
-                    currentQuizState={currentQuizState}
-                    component={quiz.component}
-                    quizState={quiz.quizState}
-                />
-            )}
+            <AnimatePresence>
+                <motion.div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                    }}
+                    key={`quizComponent-${currentQuizState}`}
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={CARD_ANIMATION_VARIANTS}
+                >
+                    {component}
+                </motion.div>
+            </AnimatePresence>
         </>
     );
-}
-
-function AnimatedQuizComponents({
-    currentQuizState,
-    component,
-    quizState
-}: {
-    currentQuizState: QuizState
-    component: ReactNode,
-    quizState: QuizState,
-}) {
-    return (
-        <AnimatePresence>
-            {currentQuizState === quizState &&
-                (
-                    <motion.div
-                        key="quizComponent"
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={cardVariants}
-                    >
-                        {component}
-                    </motion.div>
-                )
-            }
-        </AnimatePresence>
-    )
 }
