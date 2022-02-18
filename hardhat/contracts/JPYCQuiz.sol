@@ -7,6 +7,7 @@ import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Addr
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "hardhat/console.sol";
 
 contract JPYCQuiz is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
@@ -58,7 +59,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         public
         view
         returns (
-            string memory quizName, 
+            string memory quizName,
             uint256 numOfQuestions,
             uint256 minNumOfPasses,
             bool quizEnded
@@ -73,11 +74,20 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
     function getQuestionInfo(uint256 questionID_)
         public
         view
-        returns (string[] memory selectionLabels, string[] memory selectionIDs)
+        returns (
+            uint256 questionID,
+            string memory question,
+            string[] memory selectionLabels,
+            string[] memory selectionIDs
+        )
     {
+        // console.log('hardhat consoleworking');
+        // console.log(_quizEvent.questionsInfo.length);
         QuestionInfo memory questionInfo = _quizEvent.questionsInfo[
             questionID_.sub(1)
         ];
+        questionID = questionInfo.questionID;
+        question = questionInfo.question;
         selectionLabels = questionInfo.selectionLabels;
         selectionIDs = questionInfo.selectionIDs;
     }
@@ -151,6 +161,12 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         uint256 minNumOfPasses_
     ) public onlyOwner {
         uint256 sentNumOfQuestions = questions_.length;
+        require(
+            sentNumOfQuestions >= minNumOfPasses_, 
+            "minNumOfPasses_ cannot be more than sentNumOfQuestions"
+        );
+        require(minNumOfPasses_ > 0, "minNumOfPasses_ should be more than 0");
+
         QuestionInfo[] memory questionsInfo = new QuestionInfo[](
             sentNumOfQuestions
         );
@@ -169,7 +185,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         }
     }
 
-    function getIsUserPassed() public view returns(bool) {
+    function getIsUserPassed() public view returns (bool) {
         return _userAnserStatusMap[msg.sender].hasSentCorrectAnswer;
     }
 
@@ -178,6 +194,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
             answerHashes_.length == _quizEvent.questionsInfo.length,
             "Not enough answers"
         );
+        require(!getIsUserPassed(), "User already solved this quiz.");
 
         UserAnswerHistory storage history = _userAnserStatusMap[msg.sender];
 
@@ -216,5 +233,19 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
 
     function setMinNumOfPasses(uint256 minNumOfPasses_) public onlyOwner {
         _quizEvent.minNumOfPasses = minNumOfPasses_;
+    }
+
+    function getAnswerHistories()
+        public view
+        returns (bool hasSentCorrectAnswer, bool[] memory hasPassedList)
+    {
+        UserAnswerHistory memory history = _userAnserStatusMap[msg.sender];
+        hasSentCorrectAnswer = history.hasSentCorrectAnswer;
+        UserAnswer[] memory answers = history.answers;
+
+        hasPassedList = new bool[](answers.length);
+        for (uint256 i = 0; i < answers.length; i = i.add(1)) {
+            hasPassedList[i] = answers[i].hasPassed;
+        }
     }
 }

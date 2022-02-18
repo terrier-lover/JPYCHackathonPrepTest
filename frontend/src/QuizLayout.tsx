@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 
 import { ConnectWallet } from "@3rdweb/react";
 import { Box, Center, Container, VStack } from "@chakra-ui/react";
+import Navigation from "./Navigation";
 
-export default function QuizRoot({ children }: { children: ReactNode }) {
+export default function QuizLayout({ children }: { children: ReactNode }) {
   return (
     <Container
       width="100%"
@@ -44,9 +45,9 @@ export default function QuizRoot({ children }: { children: ReactNode }) {
           </Center>
         </Box>
       </Center>
-      <div style={{ 
+      <div style={{
         position: "absolute",
-        top: 20, 
+        top: 20,
         right: 20,
         boxShadow: "0 0 10px 10px rgba(255, 255, 255, 0.2)",
         borderRadius: "40%"

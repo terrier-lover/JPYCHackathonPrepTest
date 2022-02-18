@@ -23,6 +23,7 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
   functions: {
     "_mintRewardContract()": FunctionFragment;
     "_quizEvent()": FunctionFragment;
+    "getIsUserPassed()": FunctionFragment;
     "getQuestionInfo(uint256)": FunctionFragment;
     "getQuizEvent()": FunctionFragment;
     "initialize(address)": FunctionFragment;
@@ -46,6 +47,10 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "_quizEvent",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getIsUserPassed",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -102,6 +107,10 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "_quizEvent", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getIsUserPassed",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getQuestionInfo",
     data: BytesLike
@@ -240,11 +249,15 @@ export class JPYCQuiz extends BaseContract {
       }
     >;
 
+    getIsUserPassed(overrides?: CallOverrides): Promise<[boolean]>;
+
     getQuestionInfo(
       questionID_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [string[], string[]] & {
+      [BigNumber, string, string[], string[]] & {
+        questionID: BigNumber;
+        question: string;
         selectionLabels: string[];
         selectionIDs: string[];
       }
@@ -341,11 +354,18 @@ export class JPYCQuiz extends BaseContract {
     }
   >;
 
+  getIsUserPassed(overrides?: CallOverrides): Promise<boolean>;
+
   getQuestionInfo(
     questionID_: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [string[], string[]] & { selectionLabels: string[]; selectionIDs: string[] }
+    [BigNumber, string, string[], string[]] & {
+      questionID: BigNumber;
+      question: string;
+      selectionLabels: string[];
+      selectionIDs: string[];
+    }
   >;
 
   getQuizEvent(
@@ -439,11 +459,15 @@ export class JPYCQuiz extends BaseContract {
       }
     >;
 
+    getIsUserPassed(overrides?: CallOverrides): Promise<boolean>;
+
     getQuestionInfo(
       questionID_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [string[], string[]] & {
+      [BigNumber, string, string[], string[]] & {
+        questionID: BigNumber;
+        question: string;
         selectionLabels: string[];
         selectionIDs: string[];
       }
@@ -580,6 +604,8 @@ export class JPYCQuiz extends BaseContract {
 
     _quizEvent(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getIsUserPassed(overrides?: CallOverrides): Promise<BigNumber>;
+
     getQuestionInfo(
       questionID_: BigNumberish,
       overrides?: CallOverrides
@@ -660,6 +686,8 @@ export class JPYCQuiz extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     _quizEvent(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getIsUserPassed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getQuestionInfo(
       questionID_: BigNumberish,

@@ -1,7 +1,8 @@
 import { Button } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
-import { useQuizContext } from "./QuizContextProvider";
+import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
 import { CheckIcon } from "@chakra-ui/icons";
+import { useQuizStateContext } from "./QuizStateContextProvider";
 
 export default function QuizSelectionButton({
     children,
@@ -15,12 +16,14 @@ export default function QuizSelectionButton({
     questionID: number,
 }) {
     const {
-        setAnswer,
         currentQuestionID,
         previousQuestionID,
         setCurrentQuestionID,
+    } = useQuizStateContext();
+    const {
+        setAnswer,
         questionSize,
-    } = useQuizContext();
+    } = useQuizDetailsContext();
     const onClick = useCallback(() => {
         setAnswer({ selectionID, questionID });
 
@@ -31,7 +34,7 @@ export default function QuizSelectionButton({
             } else {
                 setCurrentQuestionID(currentQuestionID + 1);
             }
-        }, 700);
+        }, 500);
     }, [
         selectionID,
         questionID,

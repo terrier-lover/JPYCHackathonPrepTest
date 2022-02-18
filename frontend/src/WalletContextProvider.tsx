@@ -1,3 +1,4 @@
+import { useWeb3 } from '@3rdweb/hooks';
 import type { JsonRpcSigner } from '@ethersproject/providers'
 
 import nullthrows from "nullthrows";
@@ -19,14 +20,23 @@ const WalletContext =
 
 function WalletContextProvider({
     children,
-    contextData,
 }: {
     children: ReactNode,
-    contextData: WalletContextDataType,
 }) {
+    const {
+        address: currentAddress,
+        provider,
+        chainId: currentChainId,
+        error,
+    } = useWeb3();
+    const signer = provider?.getSigner();
+
     return (
-        <WalletContext.Provider value={
-            contextData == null ? null : contextData}>
+        <WalletContext.Provider value={{
+            currentAddress: currentAddress ?? null,
+            currentChainId: currentChainId ?? null,
+            signer: signer ?? null,
+        }}>
             {children}
         </WalletContext.Provider>
     );

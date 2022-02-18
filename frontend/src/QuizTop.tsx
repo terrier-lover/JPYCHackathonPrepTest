@@ -1,9 +1,8 @@
 import { Text, Container, HStack, VStack, Button, Tooltip } from "@chakra-ui/react";
-import { ReactNode, useCallback } from "react";
+import { useCallback } from "react";
 import CertificationCard from "./CertificationCard";
-import { useQuizContext, DEFAULT_QUESTION_ID } from "./QuizContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
 import QuizState from "./QuizState";
+import { useQuizStateContext, DEFAULT_QUESTION_ID } from "./QuizStateContextProvider";
 
 export default function QuizTop() {
   return (
@@ -42,26 +41,36 @@ export default function QuizTop() {
           ハッカソン参加のためには合格証が必要になります。テストに合格すると合格証が授与されます。Metamask Wallet をお繋ぎになり、Rinkeby Test Network を選択してください。合格後、お繋ぎ頂いた Wallet 宛に合格証が発行されます。
         </Text>
         <HStack justify="center">
-          <StartButton>
-            テストを開始する
-          </StartButton>
+          <StartButton />
         </HStack>
       </VStack>
     </HStack>
   );
 }
 
-function StartButton({ children }: { children: ReactNode }) {
-  const { setCurrentQuizState, setCurrentQuestionID } = useQuizContext();
-  const { currentAddress } = useWalletContext();
+function StartButton() {
+  const { setCurrentQuizState, setCurrentQuestionID } = useQuizStateContext();
 
   const onStartClick = useCallback(() => {
     setCurrentQuizState(QuizState.QUESTIONS);
     setCurrentQuestionID(DEFAULT_QUESTION_ID + 1);
-  }, []);
+  }, [ setCurrentQuizState, setCurrentQuestionID ]);
 
-  const isAddressEmpty = currentAddress == null;
+  return (
+    <StartButtonBase
+      isAddressEmpty={false}
+      onStartClick={onStartClick}
+    />
+  );
+}
 
+function StartButtonBase({
+  isAddressEmpty,
+  onStartClick,
+}: {
+  isAddressEmpty: boolean
+  onStartClick?: () => void,
+}) {
   return (
     <Tooltip label="右上のボタンよりWalletに接続してください" isDisabled={!isAddressEmpty}>
       <span>
@@ -77,10 +86,10 @@ function StartButton({ children }: { children: ReactNode }) {
             bgGradient: "linear(to-r, #523216, #804a17)"
           }}
           onClick={onStartClick}
-          disabled={ isAddressEmpty }
+          disabled={isAddressEmpty}
         >
-          {children}
-        </Button>    
+          テストを開始する
+        </Button>
       </span>
     </Tooltip>
   );

@@ -4,7 +4,7 @@ import QuizProgressBar from "./QuizProgressBar";
 
 export default function QuizQuestionBase({ children }: { children: ReactNode }) {
   return (
-    <VStack height="100%" marginTop={0}>
+    <VStack height="100%" width="100%" marginTop={0}>
       <QuizProgressBar />
       {children}
     </VStack>

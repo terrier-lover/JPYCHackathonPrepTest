@@ -1,18 +1,18 @@
 import { Text, Center, SimpleGrid } from "@chakra-ui/react";
-import { useQuizContext } from "./QuizContextProvider";
+import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
 import QuizSelectionButton from "./QuizSelectionButton";
 import QuizQuestionConfirmation from "./QuizQuestionConfirmation";
 import QuizQuestionBase from "./QuizQuestionBase";
+import { useQuizStateContext } from "./QuizStateContextProvider";
+import QuizQuestionGoNextButton from "./QuizQuestionGoNextButton";
 
 function appendQuestionPrefix(question: string, currentQuestionID: number) {
   return `問${currentQuestionID}. ${question}`;
 }
 
 export default function QuizQuestion() {
-  const {
-    questionSize,
-    currentQuestionID,
-  } = useQuizContext();
+  const { currentQuestionID } = useQuizStateContext();
+  const { questionSize } = useQuizDetailsContext();
 
   if (currentQuestionID > questionSize) {
     return <QuizQuestionConfirmation />;
@@ -22,14 +22,15 @@ export default function QuizQuestion() {
 }
 
 function QuestionInner() {
-  const {
-    questions,
-    answers,
-    currentQuestionID,
-  } = useQuizContext();
+  const { currentQuestionID } = useQuizStateContext();
+  const { questions, answers } = useQuizDetailsContext();
 
-  const targetQuestion = questions.find(question => question.questionID === currentQuestionID) ?? null;
-  const targetAnswer = answers.find(answer => answer.questionID === currentQuestionID) ?? null;
+  const targetQuestion = questions.find(
+    question => question.questionID === currentQuestionID
+  ) ?? null;
+  const targetAnswer = answers.find(
+    answer => answer.questionID === currentQuestionID
+  ) ?? null;
   if (targetQuestion == null || targetAnswer == null) {
     console.error(`targetQuestion should exist for ${currentQuestionID} in this component`);
     return null;
@@ -49,7 +50,7 @@ function QuestionInner() {
       >
         {appendQuestionPrefix(targetQuestion.question, currentQuestionID)}
       </Text>
-      <Center width="100%" height="176px">
+      <Center width="100%" height="100px">
         <SimpleGrid columns={2} spacing={6} width="100%">
           {targetQuestion.selectionIDs.map((selectioinID, index) => {
             const isSelected = targetAnswer.selectionID === selectioinID;
@@ -67,6 +68,7 @@ function QuestionInner() {
           })}
         </SimpleGrid>
       </Center>
+      <QuizQuestionGoNextButton />
     </QuizQuestionBase>
   );
 }

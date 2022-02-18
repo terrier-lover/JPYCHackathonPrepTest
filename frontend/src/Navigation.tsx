@@ -1,6 +1,7 @@
 import { HStack, Link } from "@chakra-ui/react";
-import { useQuizContext } from "./QuizContextProvider";
+import { useCallback } from "react";
 import QuizState from "./QuizState";
+import { useQuizStateContext } from "./QuizStateContextProvider";
 
 function NavLink({
   text,
@@ -32,12 +33,15 @@ function NavLink({
 }
 
 function Navigation() {
-  const { setCurrentQuizState } = useQuizContext();
+  const { setCurrentQuizState } = useQuizStateContext();
+  const onClickTopPage = useCallback(() => {
+    setCurrentQuizState(QuizState.TOP);
+  }, []);
 
   const LinkInfo = [
     {
       text: "事前テストトップページ",
-      onClick: () => setCurrentQuizState(QuizState.TOP)
+      onClick: onClickTopPage,
     },
     { text: "ハッカソンメインページ", href: "#" },
     { text: "テスト受講方法", href: "#" }

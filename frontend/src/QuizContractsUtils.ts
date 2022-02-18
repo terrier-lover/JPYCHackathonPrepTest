@@ -9,6 +9,13 @@ import {
     JPYCQuiz__factory as JPYCQuizFactory,
     JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
 } from './typechain';
+import { ethers } from 'ethers';
+
+const QUERY_KEY_GET_QUIZ_EVENT = 'QUERY_KEY_GET_QUIZ_EVENT';
+const QUERY_KEY_GET_IS_USER_PASSED = 'QUERY_KEY_GET_IS_USER_PASSED';
+const QUERY_KEY_GET_QUESTION_INFO = 'QUERY_KEY_GET_QUESTION_INFO';
+const MUTTION_KEY_GET_SET_USER_ANSWER_HASHES = 'MUTTION_KEY_GET_SET_USER_ANSWER_HASHES';
+const DEFAULT_RETRY: boolean | number = false;
 
 function getContracts(
     signer: JsonRpcSigner,
@@ -30,10 +37,23 @@ function getContracts(
     return { jpycQuiz, jpycQuizReward };
 }
 
-async function getAllQuestions(jpycQuiz: JPYCQuizType) {
-    const quizEvent = await jpycQuiz.getQuizEvent();
-    const numOfQuestions = quizEvent.numOfQuestions.toNumber();
-    
+function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    return value !== null && value !== undefined;
 }
 
-export { getContracts };
+function getSha256Hash(str: string) {
+    return ethers.utils.sha256(
+        ethers.utils.formatBytes32String(str)
+    );
+}
+
+export {
+    QUERY_KEY_GET_QUIZ_EVENT,
+    QUERY_KEY_GET_IS_USER_PASSED,
+    QUERY_KEY_GET_QUESTION_INFO,
+    MUTTION_KEY_GET_SET_USER_ANSWER_HASHES,
+    DEFAULT_RETRY,
+    getContracts,
+    notEmpty,
+    getSha256Hash,
+};

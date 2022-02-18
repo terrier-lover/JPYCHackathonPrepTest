@@ -1,28 +1,139 @@
-import { Button, Tooltip } from "@chakra-ui/react";
-import { useCallback } from "react";
-import { useQuizContext } from "./QuizContextProvider";
+import nullthrows from "nullthrows";
+import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "react-query";
+import QuizActionButton from "./QuizActionButton";
+import { 
+    getContracts, 
+    getSha256Hash, 
+    MUTTION_KEY_GET_SET_USER_ANSWER_HASHES, 
+    notEmpty, 
+    QUERY_KEY_GET_IS_USER_PASSED
+} from "./QuizContractsUtils";
+import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
+import { useWalletContext } from "./WalletContextProvider";
+import { useToast } from '@chakra-ui/react';
+import { useQuizStateContext } from "./QuizStateContextProvider";
 import QuizState from "./QuizState";
 
 export default function QuizConfirmationButton() {
-    const { answers, setCurrentQuizState } = useQuizContext();
-    const hasMissingAnswers = answers.some(answer => answer.selectionID == null);
+    const { signer } = useWalletContext();
+    const { setCurrentQuizState } = useQuizStateContext();
+    const { answers, questionSize } = useQuizDetailsContext();
+
+    const { jpycQuiz } = getContracts(nullthrows(signer));
+    const queryClient = useQueryClient();
+
+    const [isTransactionWaiting, setIsTransactionWaiting] = useState(false);
+    const toast = useToast();
+
+    const answerHashes = answers.map(
+        answer => answer.selectionID == null 
+            ? null: getSha256Hash(answer.selectionID)
+    )?.filter(notEmpty);
+    const answerHashesLength = answerHashes.length;
+
+    useEffect(() => {
+        const eventKey = 'LogUserAnswer';
+        const listener = (
+            _address: string,
+            isSolved: boolean,
+        ) => {
+            console.log('isSolved', isSolved);
+            setIsTransactionWaiting(false);
+            if (!isSolved) {
+                toast({
+                    title: '合格点に達していません',
+                    description: "再度トライしてください。",
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+                return;
+            }
+
+            setCurrentQuizState(QuizState.COMPLETED);
+            queryClient.setQueryData(
+                QUERY_KEY_GET_IS_USER_PASSED,
+                isSolved,
+            );
+        };
+        jpycQuiz.on(eventKey, listener);
+
+        return () => {
+            jpycQuiz.removeListener(eventKey, listener);
+        };
+    }, [jpycQuiz, queryClient]);
+
+    const {
+        isLoading: isMutationLoading,
+        mutate,
+    } = useMutation(
+        () => jpycQuiz.setUserAnswerHashes(answerHashes),
+        {
+            mutationKey: MUTTION_KEY_GET_SET_USER_ANSWER_HASHES,
+            onSuccess: (tx) => {
+                setIsTransactionWaiting(true);
+                toast({
+                    title: '送信完了!',
+                    description: "回答を送信しました。確認中のためしばしお待ちください",
+                    status: 'success',
+                    duration: 10000,
+                    isClosable: true,
+                });
+
+                Promise.resolve(tx.wait())
+                    .then(_tx => {
+                    }).catch(_error => {
+                        toast({
+                            title: '送信失敗...',
+                            description: "もう一度トライしてください。",
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                        });
+                    }).finally(() => {
+                        // setIsTransactionWaiting(false);
+                    });
+
+            },
+            onError: (_error) => {
+                toast({
+                    title: '送信失敗...',
+                    description: "もう一度トライしてください。",
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            },
+            retry: 0,
+        },
+    );
 
     const onButtonClick = useCallback(() => {
-        setCurrentQuizState(QuizState.COMPLETED);
-    }, [setCurrentQuizState]);
+        if (questionSize !== answerHashesLength) {
+            toast({
+                title: '送信失敗...',
+                description: "全問回答してください",
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        mutate();
+    }, [mutate, questionSize, answerHashesLength]);
+
+    const hasMissingAnswers = answers.some(answer => answer.selectionID == null);
+    const isLoading = isMutationLoading || isTransactionWaiting;
 
     return (
-        <Tooltip label="全問回答してください。" isDisabled={!hasMissingAnswers}>
-            <span>
-                <Button
-                    colorScheme="orange"
-                    size="lg"
-                    disabled={hasMissingAnswers}
-                    onClick={onButtonClick}
-                >
-                    回答を送る
-                </Button>
-            </span>
-        </Tooltip>
+        <QuizActionButton 
+            isButtonDisabled={hasMissingAnswers}
+            tooltipLabel="全問回答してください"
+            buttonLabel="回答を送る"
+            onButtonClick={onButtonClick}
+            isLoading={isLoading}
+        />
     );
 }

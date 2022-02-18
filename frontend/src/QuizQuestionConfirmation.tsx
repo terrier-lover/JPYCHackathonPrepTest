@@ -1,17 +1,39 @@
-import { Table, Thead, Tr, Th, Tbody, Center, Link, Td, Text } from "@chakra-ui/react";
-import { useCallback } from "react";
+import { Table, Thead, Tr, Th, Tbody, Center, Link, Td, Text, usePrevious } from "@chakra-ui/react";
+import { useCallback, useEffect } from "react";
 import QuizConfirmationButton from "./QuizConfirmationButton";
-import { AnswerType, QuestionType, useQuizContext } from "./QuizContextProvider";
+import { AnswerType, QuestionType, useQuizDetailsContext } from "./QuizDetailsContextProvider";
 import QuizQuestionBase from "./QuizQuestionBase";
+import QuizState from "./QuizState";
+import { useQuizStateContext } from "./QuizStateContextProvider";
 
 export default function QuizQuestionConfirmation() {
+    const { setCurrentQuizState } = useQuizStateContext();
     const {
         answers,
         questions,
         questionSize,
-    } = useQuizContext();
+    } = useQuizDetailsContext();
 
-    const hasMissingAnswers = answers.some(answer => answer.selectionID == null);
+    const { isSolved } = useQuizDetailsContext();
+    const previousIsSolved = usePrevious(isSolved);
+
+    useEffect(() => {
+        if (!isSolved) {
+            return;
+        }
+
+        if (!previousIsSolved && isSolved) {
+            // Expected case when user submits the result.
+            setCurrentQuizState(QuizState.COMPLETED);
+            return;
+        }
+
+        // When initial value is isSolved, just move users to the end
+        if (isSolved) {
+            setCurrentQuizState(QuizState.COMPLETED);
+            return;
+        }
+    }, [ isSolved, previousIsSolved ]);    
 
     return (
         <QuizQuestionBase>
@@ -42,6 +64,7 @@ export default function QuizQuestionConfirmation() {
                         {questions.map((question, index) => {
                             return (
                                 <QuestionConfirmationRow
+                                    key={`QuestionConfirmationRow-${index}`}
                                     targetQuestion={question}
                                     targetAnswer={answers[index]}
                                     isLastRow={(questionSize - 1) === index}
@@ -52,7 +75,7 @@ export default function QuizQuestionConfirmation() {
                 </Table>
             </div>
             <ScrollBottomShadow />
-            <Center paddingTop="8px">
+            <Center>
                 <QuizConfirmationButton />
             </Center>
         </QuizQuestionBase>
@@ -68,9 +91,7 @@ function QuestionConfirmationRow({
     targetAnswer: AnswerType,
     isLastRow: boolean,
 }) {
-    const {
-        setCurrentQuestionID,
-    } = useQuizContext();
+    const { setCurrentQuestionID } = useQuizStateContext();
     const onLinkClick = useCallback(() => {
         setCurrentQuestionID(targetQuestion.questionID);
     }, [setCurrentQuestionID, targetQuestion.questionID]);
@@ -84,17 +105,20 @@ function QuestionConfirmationRow({
         }
     );
 
+    const answer = combinedTargetQuestion.find(
+        target => target.selectionID === targetAnswer.selectionID
+    )?.selectionLabel ?? null;
     return (
         <Tr
             borderBottomWidth={isLastRow ? undefined : "1px"}
             borderBottomColor={isLastRow ? undefined : "white"}
         >
             <Td><Text noOfLines={2}>{targetQuestion.question}</Text></Td>
-            <Td><Text noOfLines={2}>{
-                combinedTargetQuestion.find(
-                    target => target.selectionID === targetAnswer.selectionID
-                )?.selectionLabel ?? "未回答"
-            }</Text></Td>
+            <Td>
+                <Text noOfLines={2} color={answer == null ? "red" : undefined}>
+                    {answer ?? "未回答"}
+                </Text>
+            </Td>
             <Td><Link onClick={onLinkClick}>修正する</Link></Td>
         </Tr>
     );
