@@ -30,7 +30,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
     function mint(address destination_) public {
         require(_msgSender() == _mintRewardCaller, "Invalid caller");
 
-        // One can mint more than 1 NFT for owner
+        // Owner can have more than 1 NFT
         if (owner() != destination_) {
             require(
                 originalMinterToTokenIDMap[destination_] == 0,

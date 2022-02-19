@@ -7,7 +7,6 @@ import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Addr
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "hardhat/console.sol";
 
 contract JPYCQuiz is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
@@ -15,7 +14,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
 
     event LogSetQuestionInfo(uint256 indexed questionId_);
     event LogUserAnswer(address indexed userAddress_, bool hasPassed_);
-    event LogMintReward(address indexed userAddress_, bool isAdmin);
+    event LogMintReward(address indexed userAddress_, bool isAdmin_);
 
     struct QuestionInfo {
         uint256 questionID; // QuestionID starts with 1
@@ -23,6 +22,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         string[] selectionLabels;
         string[] selectionIDs;
         string solutionHash; // Store solution in a hash format
+        bool useBinarySelections;
     }
 
     struct QuizEvent {
@@ -38,14 +38,14 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         UserAnswer[] answers;
     }
 
-    // TODO: Should add versionID in case owner updates the quiz itself.
     struct UserAnswer {
         bool hasPassed;
         string[] hashes; // Store answers in a hash format
     }
 
-    // key = an address of user, value = answer history of user
-    mapping(address => UserAnswerHistory) _userAnserStatusMap;
+    // First map: user address to map of second map
+    // Second map: event versionID to user answer history
+    mapping(address => mapping(uint256 => UserAnswerHistory)) _userAnserStatusMap;
     QuizEvent public _quizEvent;
     address public _mintRewardContract;
     CountersUpgradeable.Counter private _eventVersionID;
@@ -78,11 +78,10 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
             uint256 questionID,
             string memory question,
             string[] memory selectionLabels,
-            string[] memory selectionIDs
+            string[] memory selectionIDs,
+            bool useBinarySelections
         )
     {
-        // console.log('hardhat consoleworking');
-        // console.log(_quizEvent.questionsInfo.length);
         QuestionInfo memory questionInfo = _quizEvent.questionsInfo[
             questionID_.sub(1)
         ];
@@ -90,6 +89,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         question = questionInfo.question;
         selectionLabels = questionInfo.selectionLabels;
         selectionIDs = questionInfo.selectionIDs;
+        useBinarySelections = questionInfo.useBinarySelections;
     }
 
     function compareStrings(string memory a_, string memory b_)
@@ -130,7 +130,8 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         uint256 questionID_,
         string[] memory selectionLabels_,
         string[] memory selectionIDs_,
-        string memory solutionHash_
+        string memory solutionHash_,
+        bool useBinarySelections_
     ) public onlyOwner {
         QuestionInfo storage questionInfo = _quizEvent.questionsInfo[
             questionID_.sub(1)
@@ -144,6 +145,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         questionInfo.selectionLabels = selectionLabels_;
         questionInfo.solutionHash = solutionHash_;
         questionInfo.selectionIDs = selectionIDs_;
+        questionInfo.useBinarySelections = useBinarySelections_;
 
         emit LogSetQuestionInfo(questionID_);
     }
@@ -162,7 +164,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
     ) public onlyOwner {
         uint256 sentNumOfQuestions = questions_.length;
         require(
-            sentNumOfQuestions >= minNumOfPasses_, 
+            sentNumOfQuestions >= minNumOfPasses_,
             "minNumOfPasses_ cannot be more than sentNumOfQuestions"
         );
         require(minNumOfPasses_ > 0, "minNumOfPasses_ should be more than 0");
@@ -186,7 +188,9 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
     }
 
     function getIsUserPassed() public view returns (bool) {
-        return _userAnserStatusMap[msg.sender].hasSentCorrectAnswer;
+        return
+            _userAnserStatusMap[msg.sender][_eventVersionID.current()]
+                .hasSentCorrectAnswer;
     }
 
     function setUserAnswerHashes(string[] memory answerHashes_) public {
@@ -196,7 +200,9 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         );
         require(!getIsUserPassed(), "User already solved this quiz.");
 
-        UserAnswerHistory storage history = _userAnserStatusMap[msg.sender];
+        UserAnswerHistory storage history = _userAnserStatusMap[msg.sender][
+            _eventVersionID.current()
+        ];
 
         uint256 numOfCorrectAnswers = 0;
         for (uint256 i = 0; i < answerHashes_.length; i = i.add(1)) {
@@ -236,10 +242,13 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
     }
 
     function getAnswerHistories()
-        public view
+        public
+        view
         returns (bool hasSentCorrectAnswer, bool[] memory hasPassedList)
     {
-        UserAnswerHistory memory history = _userAnserStatusMap[msg.sender];
+        UserAnswerHistory memory history = _userAnserStatusMap[msg.sender][
+            _eventVersionID.current()
+        ];
         hasSentCorrectAnswer = history.hasSentCorrectAnswer;
         UserAnswer[] memory answers = history.answers;
 
@@ -247,5 +256,9 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         for (uint256 i = 0; i < answers.length; i = i.add(1)) {
             hasPassedList[i] = answers[i].hasPassed;
         }
+    }
+
+    function getCurrentEventVersionID() public view returns (uint256) {
+        return _eventVersionID.current();
     }
 }

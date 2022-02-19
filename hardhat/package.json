@@ -37,6 +37,8 @@
     "ulid": "^2.3.0"
   },
   "dependencies": {
-    "@types/uuid": "^8.3.4"
+    "@types/uuid": "^8.3.4",
+    "fs": "^0.0.1-security",
+    "sinon": "^13.0.1"
   }
 }

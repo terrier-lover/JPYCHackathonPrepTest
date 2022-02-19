@@ -3,7 +3,6 @@ import type {
 } from "../../typechain";
 
 import { setQuestionsInfo, setQuizEventAndQuestionsSkelton } from './utils';
-import { ulid } from 'ulid';
 import { getSha256Hash } from '../../utils/QuizUtils';
 
 function makeQuestions(numOfQuestions: number) {
@@ -15,7 +14,23 @@ function makeSelectionLabels(numOfQuestions: number) {
 }
 
 function makeSelectionIDs(numOfQuestions: number) {
-    return Array.from(Array(numOfQuestions).keys()).map(key => ulid());
+    return Array.from(Array(numOfQuestions).keys()).map(key => {
+        // return string which has similar value with ulid
+        return `01ARZ3NDEKTSV4RRFFQ69G5FA${key.toString(10)}`;
+    });
+}
+
+function makeSelectionInfo(numOfQuestions: number) {
+    const numOfSelections = 2;
+
+    return Array.from(Array(numOfQuestions).keys()).map(
+        key => {
+            return {
+                numOfSelections,
+                solutionIndex: numOfSelections - (key % 2 == 0 ? 1 : 2),
+            };
+        }
+    );
 }
 
 async function makeQuizQuestions(options: {
@@ -26,14 +41,16 @@ async function makeQuizQuestions(options: {
     questionSelectionsInfo: {
         numOfSelections: number,
         solutionIndex: number,
-    }[]
+    }[],
+    useBinarySelections: boolean,
 }) {
     const { 
         JPYCQuiz, 
         quizName, 
         numOfQuestions, 
         minNumOfPasses, 
-        questionSelectionsInfo 
+        questionSelectionsInfo,
+        useBinarySelections,
     } = options;
 
     const questions = makeQuestions(numOfQuestions);
@@ -54,7 +71,8 @@ async function makeQuizQuestions(options: {
             return {
                 selectionLabels: makeSelectionLabels(numOfSelections),
                 selectionIDs,
-                solutionHash: getSha256Hash(selectionIDs[solutionIndex])
+                solutionHash: getSha256Hash(selectionIDs[solutionIndex]),
+                useBinarySelections,
             };
         },
     );
@@ -63,4 +81,4 @@ async function makeQuizQuestions(options: {
     return { questions, questionSelections }
 }
 
-export { makeQuestions, makeQuizQuestions };
+export { makeQuestions, makeQuizQuestions, makeSelectionInfo };

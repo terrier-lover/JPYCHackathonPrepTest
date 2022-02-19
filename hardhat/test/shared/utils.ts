@@ -2,11 +2,12 @@ import type {
     JPYCQuiz as JPYCQuizType,
     JPYCQuizRewardNFT as JPYCQuizRewardNFTType,
 } from "../../typechain";
-import type {
-    SignerWithAddress as SignerWithAddressType
-} from "@nomiclabs/hardhat-ethers/signers";
-import type { Wallet, Signer } from "ethers";
+import type { 
+    Signer, 
+    ContractTransaction as ContractTransactionType 
+} from "ethers";
 
+import { expect } from "chai";
 import { upgrades } from "hardhat";
 import {
     JPYCQuiz__factory as JPYCQuizFactory,
@@ -59,9 +60,10 @@ function setQuizEventAndQuestionsSkeltonTransaction(
 async function setQuestionsInfo(
     JPYCQuiz: JPYCQuizType,
     questionSelections: {
-        selectionLabels: string[];
-        selectionIDs: string[];
-        solutionHash: string;
+        selectionLabels: string[],
+        selectionIDs: string[],
+        solutionHash: string,
+        useBinarySelections: boolean,
     }[],
 ) {
     const setQuestions = questionSelections.map(
@@ -70,7 +72,8 @@ async function setQuestionsInfo(
                 index + 1,
                 selection.selectionLabels,
                 selection.selectionIDs,
-                selection.solutionHash
+                selection.solutionHash,
+                selection.useBinarySelections,
             );
             return await tx.wait();
         }
@@ -86,12 +89,13 @@ async function setQuizQuestions(
         minNumOfPasses: number,
     },
     questionSelections: {
-        selectionLabels: string[];
-        selectionIDs: string[];
-        solutionHash: string;
-    }[],        
+        selectionLabels: string[],
+        selectionIDs: string[],
+        solutionHash: string,
+        useBinarySelections: boolean,
+    }[],
 ) {
-    const { quizName, questions,  minNumOfPasses } = quizInfo;
+    const { quizName, questions, minNumOfPasses } = quizInfo;
 
     await setQuizEventAndQuestionsSkelton(
         JPYCQuiz,
@@ -144,25 +148,89 @@ async function setUserAnswerHashesTransaction(options: {
         numOfSelections: number,
         solutionIndex: number
     }[],
+    numOfCorrectAnswers: number, // depending on this value, user fails the test
 }) {
-    const { JPYCQuiz, connectAs, questionSelectionsInfo } = options;
+    const {
+        JPYCQuiz,
+        connectAs,
+        questionSelectionsInfo,
+        numOfCorrectAnswers,
+    } = options;
 
-    const answerHashes = await Promise.all(
-        questionSelectionsInfo.map(
-            async (selectionInfo, index) => {
+    let leftOverNumOfCorrectAnswers = numOfCorrectAnswers;
+
+    const asyncAnswerHashes = questionSelectionsInfo.map(
+        async (selectionInfo, index) => {
             const questionInfo =
                 await JPYCQuiz.connect(connectAs).getQuestionInfo(index + 1);
-            return getSha256Hash(
-                questionInfo.selectionIDs[selectionInfo.solutionIndex],
-            );
+
+            let rawSolutionID: string | null = null;
+            const correctSolutionID = questionInfo.selectionIDs[
+                selectionInfo.solutionIndex
+            ];
+
+            if (leftOverNumOfCorrectAnswers > 0) {
+                // set correct answer
+                rawSolutionID = correctSolutionID;
+                leftOverNumOfCorrectAnswers--;
+            } else {
+                rawSolutionID = questionInfo.selectionIDs.find(
+                    selectionID => selectionID !== correctSolutionID
+                ) ?? null;
             }
-        )
+
+            if (rawSolutionID == null) {
+                return null;
+            }
+
+            return getSha256Hash(rawSolutionID);
+        }
     );
-    
+
+    const answerHashes = (await Promise.all(asyncAnswerHashes)).filter(notEmpty);
+
     return JPYCQuiz.connect(connectAs).setUserAnswerHashes(answerHashes);
 }
 
+function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    return value !== null && value !== undefined;
+}
+
+async function testGetNFT(options: {
+    JPYCQuiz: JPYCQuizType,
+    JPYCQuizRewardNFT: JPYCQuizRewardNFTType,
+    connectAs: Signer,
+    nextTokenID: number,
+    transaction: Promise<ContractTransactionType>,
+}) {
+    const { 
+        JPYCQuiz, 
+        JPYCQuizRewardNFT,
+        connectAs, 
+        nextTokenID,
+        transaction,
+    } = options;
+
+    const connectAsAddress = await connectAs.getAddress();
+
+    await expect(transaction)
+        .to.emit(JPYCQuiz, 'LogUserAnswer')
+        .withArgs(connectAsAddress, true);
+
+    const mintedTokenID = (
+        await JPYCQuizRewardNFT.connect(connectAs).getTokenIDFromMinter(
+            connectAsAddress
+        )
+    ).toNumber();
+    expect(mintedTokenID).to.equals(nextTokenID);
+
+    const actualQuizTakerAddress =
+        await JPYCQuizRewardNFT.connect(connectAs).ownerOf(mintedTokenID);
+    expect(actualQuizTakerAddress).to.equals(connectAsAddress);
+}
+
 export {
+    notEmpty,
     setQuizQuestions,
     setMintRewardCaller,
     setQuizEventAndQuestionsSkelton,
@@ -171,4 +239,5 @@ export {
     deployJPYCQuizRewardNFT,
     deployJPYCQuiz,
     setUserAnswerHashesTransaction,
+    testGetNFT,
 };

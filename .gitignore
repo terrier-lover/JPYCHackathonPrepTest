@@ -9,6 +9,7 @@ hardhat/coverage.json
 hardhat/typechain
 hardhat/cache
 hardhat/artifacts
+hardhat/quizInfo.json
 
 # Frontend files
 frontend/.env

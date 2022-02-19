@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import { ulid } from 'ulid';
+import { promises as fs } from 'fs';
 
 function makeQuestionSelection(
     selectionLabels: string[],
@@ -17,6 +18,7 @@ function makeQuestionSelection(
         selectionIDs,
         solutionHash,
         solutionIndex,
+        useBinarySelections: true,
     };
 }
 
@@ -26,4 +28,11 @@ function getSha256Hash(str: string) {
     );
 }
 
-export { makeQuestionSelection, getSha256Hash };
+async function exportJSONString(
+    jsonString: string,
+    path: string,
+) {
+    await fs.writeFile(path, jsonString);
+}
+
+export { makeQuestionSelection, getSha256Hash, exportJSONString };

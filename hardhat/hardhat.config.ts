@@ -8,8 +8,7 @@ import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-
-dotenv.config();
+import { ENV } from './settings';
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -28,23 +27,20 @@ const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
     rinkeby: {
-      url: process.env.RINKEBY_URL || "",
+      url: ENV.RINKEBY_URL || "",
       accounts:
         [
-          process.env.RINKEBY_PRIVATE_KEY_OWNER == null
-            ? null : process.env.RINKEBY_PRIVATE_KEY_OWNER,
-            process.env.RINKEBY_PRIVATE_KEY_OTHER1 == null
-            ? null : process.env.RINKEBY_PRIVATE_KEY_OTHER1,
+          ENV.RINKEBY_PRIVATE_KEY_OWNER == null
+            ? null : ENV.RINKEBY_PRIVATE_KEY_OWNER,
+            ENV.RINKEBY_PRIVATE_KEY_OTHER1 == null
+            ? null : ENV.RINKEBY_PRIVATE_KEY_OTHER1,
         ].filter(notEmpty),
-      // chainId: COMMON_VARIABLES_AND_FUNCTIONS.CHAIN_IDS.RINKEBY,
+      // chainId: CHAIN_IDS.RINKEBY,
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: ENV.REPORT_GAS !== undefined,
     currency: "USD",
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
 
