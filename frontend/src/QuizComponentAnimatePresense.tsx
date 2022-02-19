@@ -48,7 +48,7 @@ export default function QuizComponentAnimatePresense({
                 variants={CARD_ANIMATION_VARIANTS}
             >
                 {children}
-              </motion.div>
-         </AnimatePresence>
+            </motion.div>
+        </AnimatePresence>
     );
 }

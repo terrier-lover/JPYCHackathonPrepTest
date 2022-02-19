@@ -4,27 +4,9 @@ import QuizQuestion from "./QuizQuestion";
 import QuizCompleted from "./QuizCompleted";
 import { useQuizStateContext } from "./QuizStateContextProvider";
 import QuizComponentAnimatePresense from "./QuizComponentAnimatePresense";
-import { useWalletContext } from "./WalletContextProvider";
-import { usePrevious } from "@chakra-ui/react";
-import { useEffect } from "react";
 
 export default function QuizComponent() {
-    const { currentAddress } = useWalletContext();
-    const { currentQuizState, setCurrentQuizState } = useQuizStateContext();
-    const previousAddress = usePrevious(currentAddress);
-
-    // // Detect the wallet switching
-    // useEffect(() => {
-    //     if (currentAddress == null || previousAddress == null) {
-    //         return;
-    //     }
-
-    //     if (previousAddress !== currentAddress) {
-    //         // If the wallet is different from the previous one, go to root
-    //         setCurrentQuizState(QuizState.TOP);
-    //     }
-
-    // }, [ previousAddress, currentAddress, setCurrentQuizState ]);
+    const { currentQuizState } = useQuizStateContext();
 
     let component;
     switch (currentQuizState) {

@@ -3,8 +3,8 @@ import { usePrevious } from '@chakra-ui/react';
 import type { JsonRpcSigner } from '@ethersproject/providers'
 
 import nullthrows from "nullthrows";
-import React, { useEffect } from 'react';
-import { ReactNode, createContext, useContext } from "react";
+import React from 'react';
+import { ReactNode, createContext, useContext, useEffect, useRef } from "react";
 
 interface WalletContextDataType {
     currentAddress: string | null,
@@ -20,8 +20,6 @@ const WalletContext =
         walletContextDefaultValue,
     );
 
-let fragmentKey = 0;
-
 function WalletContextProvider({
     children,
 }: {
@@ -34,35 +32,23 @@ function WalletContextProvider({
     } = useWeb3();
     const signer = provider?.getSigner();
 
+    const fragmentKeyRef = useRef(0);
     const previousAddress = usePrevious(currentAddress);
 
-    console.log("### Start ");
-    console.log({ currentAddress });
-    console.log({ previousAddress });
-    if (
-        currentAddress != null
-        && previousAddress != null
-        && previousAddress !== currentAddress
-    ) {
-        console.log("currentAddress != null", currentAddress != null);
-        console.log("previousAddress != null", previousAddress != null);
-        console.log("previousAddress !== currentAddress", previousAddress !== currentAddress);
-        // If the wallet is different from the previous one, increase the key
-        fragmentKey = fragmentKey + 1;
-    }    
-    console.log({ fragmentKey });
-    // // Detect the wallet switching
-    // useEffect(() => {
-    //     if (currentAddress == null || previousAddress == null) {
-    //         return;
-    //     }
+    useEffect(() => {
+        if (currentAddress == null || previousAddress == null) {
+            return;
+        }
+        if (previousAddress < currentAddress) {
+            fragmentKeyRef.current = fragmentKeyRef.current + 1
+        }
+    }, [previousAddress, currentAddress]);
 
-    //     if (previousAddress !== currentAddress) {
-    //         // If the wallet is different from the previous one, increase the key
-    //         fragmentKey++;
-    //     }
-
-    // }, [ previousAddress, currentAddress ]);
+    useEffect(() => {
+        return () => {
+            fragmentKeyRef.current = 0;
+        };
+    }, []);
 
     return (
         <WalletContext.Provider value={{
@@ -70,7 +56,7 @@ function WalletContextProvider({
             currentChainId: currentChainId ?? null,
             signer: signer ?? null,
         }}>
-            <React.Fragment key={`fragmentKey-${fragmentKey}`}>
+            <React.Fragment key={`fragmentKey-${fragmentKeyRef.current}`}>
                 {children}
             </React.Fragment>
         </WalletContext.Provider>
