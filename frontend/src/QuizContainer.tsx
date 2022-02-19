@@ -1,4 +1,4 @@
-import { AnswerType, QuestionType, QuizDetailsContextProvider, useQuizDetailsContext } from "./QuizDetailsContextProvider";
+import { AnswerType, QuestionType, QuizDetailsContextProvider } from "./QuizDetailsContextProvider";
 
 import CommonAlert from "./CommonAlert";
 import { Center, Spinner } from "@chakra-ui/react";
@@ -6,7 +6,9 @@ import { useWalletContext } from "./WalletContextProvider";
 import nullthrows from "nullthrows";
 import { useQueries } from "react-query";
 import { getContracts, QUERY_KEY_GET_QUIZ_EVENT, DEFAULT_RETRY, QUERY_KEY_GET_IS_USER_PASSED, QUERY_KEY_GET_QUESTION_INFO, notEmpty } from "./QuizContractsUtils";
-import { ReactNode, useMemo, useRef } from "react";
+import { ReactNode, useEffect, useMemo, useRef } from "react";
+import { useQuizStateContext } from "./QuizStateContextProvider";
+import QuizState from "./QuizState";
 
 export default function QuizContainer({ children }: { children: ReactNode }) {
     // Check the state of quiz
@@ -48,7 +50,6 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
         ]);
 
     const isFirstLoading = firstResults.some(result => result.isLoading);
-    const isFirstStale = firstResults.some(result => result.isStale);
     const isFirstError = firstResults.some(result => result.isError);
     const isFirstSuccess = firstResults.every(result => result.isSuccess);
 
@@ -80,7 +81,6 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
     const secondResults = useQueries(secondQueries);
 
     const isSecondLoading = secondResults.some(result => result.isLoading);
-    const isSecondStale = secondResults.some(result => result.isStale);
     const isSecondError = secondResults.some(result => result.isError);
     const isSecondSuccess = secondResults.every(result => result.isSuccess);
 
@@ -90,7 +90,14 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
             if (data == null) {
                 return null;
             }
-
+            if (
+                data.questionID == null
+                || data.question == null
+                || data.selectionLabels == null 
+                || data.selectionIDs == null
+            ) {
+                return null;
+            }
             return {
                 questionID: data.questionID.toNumber(),
                 question: data.question,
@@ -110,35 +117,49 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
     const memoizedEmptyAnswers = useDeepMemo(emptyAnswers);
     const memoizedQuestions = useDeepMemo(questions);
 
-    if (isFirstLoading || isSecondLoading) {
-        if (isFirstLoading && isFirstStale) {
-            return <QuizSpinner />;
+    const shouldShowLoadingState = isFirstLoading || isSecondLoading;
+    const shouldShowErrorState = 
+        !shouldShowLoadingState 
+        && (
+            isFirstError
+            || !isFirstSuccess
+            || isSecondError
+            || (isFirstSuccess && isUserPassed === false && !isSecondSuccess)
+        );
+
+    const { currentQuizState, setCurrentQuizState } = useQuizStateContext();  
+    useEffect(() => {
+        if (
+            shouldShowLoadingState 
+            || shouldShowErrorState 
+            || currentQuizState !== QuizState.TOP
+        ) {
+            return;
         }
 
-        if (isSecondLoading && isSecondStale) {
-            return <QuizSpinner />;
+        if (isUserPassed === true) {
+            setCurrentQuizState(QuizState.COMPLETED);
         }
-
+    }, [
+        currentQuizState, 
+        shouldShowLoadingState, 
+        shouldShowErrorState, 
+        isUserPassed,
+        setCurrentQuizState,
+    ]);
+    
+    if (shouldShowLoadingState) {
         return <QuizSpinner />;
     }
 
-    if (
-        isFirstError
-        || !isFirstSuccess
-        || isSecondError
-        || !isSecondSuccess
-    ) {
+    if (shouldShowErrorState) {
         return (
             <CommonAlert
-                title="Error"
-                description="Something went wrong. Please visit this page again."
+                title="エラー"
+                description="再度ページを読み込んでください"
             />
         );
-    }
-
-    if (questions.length === 0 || emptyAnswers.length === 0) {
-        return <>no quiz information exist state</>;
-    }
+    }    
 
     // Check emptyAnswers and questions are same
     return (

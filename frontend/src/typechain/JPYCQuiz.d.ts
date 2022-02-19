@@ -23,6 +23,8 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
   functions: {
     "_mintRewardContract()": FunctionFragment;
     "_quizEvent()": FunctionFragment;
+    "getAnswerHistories()": FunctionFragment;
+    "getCurrentEventVersionID()": FunctionFragment;
     "getIsUserPassed()": FunctionFragment;
     "getQuestionInfo(uint256)": FunctionFragment;
     "getQuizEvent()": FunctionFragment;
@@ -32,7 +34,7 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     "renounceOwnership()": FunctionFragment;
     "setMinNumOfPasses(uint256)": FunctionFragment;
     "setMintRewardContract(address)": FunctionFragment;
-    "setQuestionInfo(uint256,string[],string[],string)": FunctionFragment;
+    "setQuestionInfo(uint256,string[],string[],string,bool)": FunctionFragment;
     "setQuestionStatement(uint256,string)": FunctionFragment;
     "setQuizEnd(bool)": FunctionFragment;
     "setQuizEventAndQuestionsSkelton(string,string[],uint256)": FunctionFragment;
@@ -47,6 +49,14 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "_quizEvent",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAnswerHistories",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getCurrentEventVersionID",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -81,7 +91,7 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setQuestionInfo",
-    values: [BigNumberish, string[], string[], string]
+    values: [BigNumberish, string[], string[], string, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "setQuestionStatement",
@@ -107,6 +117,14 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "_quizEvent", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getAnswerHistories",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getCurrentEventVersionID",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getIsUserPassed",
     data: BytesLike
@@ -177,7 +195,7 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
 }
 
 export type LogMintRewardEvent = TypedEvent<
-  [string, boolean] & { userAddress_: string; isAdmin: boolean }
+  [string, boolean] & { userAddress_: string; isAdmin_: boolean }
 >;
 
 export type LogSetQuestionInfoEvent = TypedEvent<
@@ -249,17 +267,29 @@ export class JPYCQuiz extends BaseContract {
       }
     >;
 
+    getAnswerHistories(
+      overrides?: CallOverrides
+    ): Promise<
+      [boolean, boolean[]] & {
+        hasSentCorrectAnswer: boolean;
+        hasPassedList: boolean[];
+      }
+    >;
+
+    getCurrentEventVersionID(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     getIsUserPassed(overrides?: CallOverrides): Promise<[boolean]>;
 
     getQuestionInfo(
       questionID_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, string[], string[]] & {
+      [BigNumber, string, string[], string[], boolean] & {
         questionID: BigNumber;
         question: string;
         selectionLabels: string[];
         selectionIDs: string[];
+        useBinarySelections: boolean;
       }
     >;
 
@@ -304,6 +334,7 @@ export class JPYCQuiz extends BaseContract {
       selectionLabels_: string[],
       selectionIDs_: string[],
       solutionHash_: string,
+      useBinarySelections_: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -354,17 +385,29 @@ export class JPYCQuiz extends BaseContract {
     }
   >;
 
+  getAnswerHistories(
+    overrides?: CallOverrides
+  ): Promise<
+    [boolean, boolean[]] & {
+      hasSentCorrectAnswer: boolean;
+      hasPassedList: boolean[];
+    }
+  >;
+
+  getCurrentEventVersionID(overrides?: CallOverrides): Promise<BigNumber>;
+
   getIsUserPassed(overrides?: CallOverrides): Promise<boolean>;
 
   getQuestionInfo(
     questionID_: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, string, string[], string[]] & {
+    [BigNumber, string, string[], string[], boolean] & {
       questionID: BigNumber;
       question: string;
       selectionLabels: string[];
       selectionIDs: string[];
+      useBinarySelections: boolean;
     }
   >;
 
@@ -409,6 +452,7 @@ export class JPYCQuiz extends BaseContract {
     selectionLabels_: string[],
     selectionIDs_: string[],
     solutionHash_: string,
+    useBinarySelections_: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -459,17 +503,29 @@ export class JPYCQuiz extends BaseContract {
       }
     >;
 
+    getAnswerHistories(
+      overrides?: CallOverrides
+    ): Promise<
+      [boolean, boolean[]] & {
+        hasSentCorrectAnswer: boolean;
+        hasPassedList: boolean[];
+      }
+    >;
+
+    getCurrentEventVersionID(overrides?: CallOverrides): Promise<BigNumber>;
+
     getIsUserPassed(overrides?: CallOverrides): Promise<boolean>;
 
     getQuestionInfo(
       questionID_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, string, string[], string[]] & {
+      [BigNumber, string, string[], string[], boolean] & {
         questionID: BigNumber;
         question: string;
         selectionLabels: string[];
         selectionIDs: string[];
+        useBinarySelections: boolean;
       }
     >;
 
@@ -510,6 +566,7 @@ export class JPYCQuiz extends BaseContract {
       selectionLabels_: string[],
       selectionIDs_: string[],
       solutionHash_: string,
+      useBinarySelections_: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -544,18 +601,18 @@ export class JPYCQuiz extends BaseContract {
   filters: {
     "LogMintReward(address,bool)"(
       userAddress_?: string | null,
-      isAdmin?: null
+      isAdmin_?: null
     ): TypedEventFilter<
       [string, boolean],
-      { userAddress_: string; isAdmin: boolean }
+      { userAddress_: string; isAdmin_: boolean }
     >;
 
     LogMintReward(
       userAddress_?: string | null,
-      isAdmin?: null
+      isAdmin_?: null
     ): TypedEventFilter<
       [string, boolean],
-      { userAddress_: string; isAdmin: boolean }
+      { userAddress_: string; isAdmin_: boolean }
     >;
 
     "LogSetQuestionInfo(uint256)"(
@@ -604,6 +661,10 @@ export class JPYCQuiz extends BaseContract {
 
     _quizEvent(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getAnswerHistories(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getCurrentEventVersionID(overrides?: CallOverrides): Promise<BigNumber>;
+
     getIsUserPassed(overrides?: CallOverrides): Promise<BigNumber>;
 
     getQuestionInfo(
@@ -643,6 +704,7 @@ export class JPYCQuiz extends BaseContract {
       selectionLabels_: string[],
       selectionIDs_: string[],
       solutionHash_: string,
+      useBinarySelections_: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -687,6 +749,14 @@ export class JPYCQuiz extends BaseContract {
 
     _quizEvent(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    getAnswerHistories(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getCurrentEventVersionID(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getIsUserPassed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getQuestionInfo(
@@ -726,6 +796,7 @@ export class JPYCQuiz extends BaseContract {
       selectionLabels_: string[],
       selectionIDs_: string[],
       solutionHash_: string,
+      useBinarySelections_: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

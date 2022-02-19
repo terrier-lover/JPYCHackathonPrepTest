@@ -1,10 +1,24 @@
 import type { ReactNode } from "react";
 
 import { ConnectWallet } from "@3rdweb/react";
-import { Box, Center, Container, VStack } from "@chakra-ui/react";
-import Navigation from "./Navigation";
+import { Box, Center, Container, usePrevious, VStack } from "@chakra-ui/react";
+import { useWalletContext } from "./WalletContextProvider";
+
+let fragmentKey = 0;
 
 export default function QuizLayout({ children }: { children: ReactNode }) {
+  // const { currentAddress } = useWalletContext(); 
+  // const previousAddress = usePrevious(currentAddress);
+
+  // if (
+  //     !( currentAddress == null || previousAddress == null ) 
+  //     && previousAddress !== currentAddress
+  // ) {
+  //     // If the wallet is different from the previous one, increase the key
+  //     fragmentKey++;
+  // }    
+  // console.log('fragmentKey', fragmentKey);
+
   return (
     <Container
       width="100%"
@@ -53,6 +67,7 @@ export default function QuizLayout({ children }: { children: ReactNode }) {
         borderRadius: "40%"
       }}>
         <ConnectWallet
+          key={`ConnectWallet-${fragmentKey}`}
           bg="white"
           borderColor="blue.500"
           _hover={{ borderColor: "blue.600" }}

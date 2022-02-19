@@ -21,8 +21,8 @@ function ErrorFallback(
         }
 
         toast({
-            title: 'Error',
-            description: "Something went wrong. Please try again.",
+            title: "エラー",
+            description: "エラーが発生しました。再度ページを読み込んでください",
             status: 'warning',
             duration: null,
             isClosable: true,

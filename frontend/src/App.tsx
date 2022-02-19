@@ -10,19 +10,19 @@ import Navigation from "./Navigation";
 
 export default function App() {
   return (
-    <ThirdwebProviderWrapper>
-      <QuizStateContextProvider>
-        <QuizLayout>
-          <WalletContextProvider>
+    <QuizStateContextProvider>
+      <ThirdwebProviderWrapper>
+        <WalletContextProvider>
+          <QuizLayout>
             <Navigation />
-            <QuizContainer>              
+            <QuizContainer>
               <QuizComponentAnimatePresense>
                 <QuizComponent />
               </QuizComponentAnimatePresense>
             </QuizContainer>
-          </WalletContextProvider>
-        </QuizLayout>
-      </QuizStateContextProvider>
-    </ThirdwebProviderWrapper>
+          </QuizLayout>
+        </WalletContextProvider>
+      </ThirdwebProviderWrapper>
+    </QuizStateContextProvider>
   );
 }

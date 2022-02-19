@@ -6,7 +6,7 @@ import { useQuizStateContext, DEFAULT_QUESTION_ID } from "./QuizStateContextProv
 
 export default function QuizTop() {
   return (
-    <HStack justify="space-between" marginTop="12px">
+    <HStack justify="space-between" marginTop="12px" width="100%">
       <CertificationCard />
       <VStack
         paddingLeft="10px"

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";
 import { useQuizStateContext } from "./QuizStateContextProvider";
+import { useWalletContext } from "./WalletContextProvider";
 
 const CARD_ANIMATION_VARIANTS = {
     initial: {
@@ -30,6 +31,7 @@ export default function QuizComponentAnimatePresense({
 }: {
     children: ReactNode,
 }) {
+    const { currentAddress } = useWalletContext();
     const { currentQuizState } = useQuizStateContext();
 
     return (
@@ -39,14 +41,14 @@ export default function QuizComponentAnimatePresense({
                     width: "100%",
                     height: "100%",
                 }}
-                key={`quizComponent-${currentQuizState}`}
+                key={`quizComponent-${currentQuizState}-${currentAddress ?? 'empty'}`}
                 initial="initial"
                 animate="in"
                 exit="out"
                 variants={CARD_ANIMATION_VARIANTS}
             >
                 {children}
-            </motion.div>
-        </AnimatePresence>
+              </motion.div>
+         </AnimatePresence>
     );
 }
