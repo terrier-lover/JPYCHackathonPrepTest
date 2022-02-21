@@ -6,6 +6,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "base64-sol/base64.sol";
 
+interface IJPYCQuizRewardNFT {
+    function mintFromRewardCaller(address destination_) external;
+}
+
 contract JPYCQuizRewardNFT is ERC721, Ownable {
     uint256 public _currentTokenId;
     address public _mintRewardCaller;
@@ -27,7 +31,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         return originalMinterToTokenIDMap[minter_];
     }
 
-    function mint(address destination_) public {
+    function mintFromRewardCaller(address destination_) external {
         require(_msgSender() == _mintRewardCaller, "Invalid caller");
 
         // Owner can have more than 1 NFT
@@ -60,6 +64,14 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         );
 
         return getTokenURIJson(tokenId_);
+    }
+
+    function getTokenURIForMinter(address minterAddress_) 
+        public view 
+        returns (string memory) 
+    {
+        uint256 tokenId = getTokenIDFromMinter(minterAddress_);
+        return tokenURI(tokenId);
     }
 
     function getTokenURIJson(uint256 tokenId_)
@@ -132,7 +144,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
                     unicode"4月開催",
                     '</text><text font-family="sans-serif" letter-spacing=".02em" fill="url(#b)" font-weight="700" font-size="60" y="383" x="83">',
                     unicode"合格証",
-                    '</text><text font-family="sans-serif" letter-spacing=".02em" fill="url(#c)" font-weight="bold" font-size="17" x="90" y="413">Wallet ID:</text>'
+                    '</text><text font-family="sans-serif" letter-spacing=".02em" fill="url(#c)" font-weight="bold" font-size="16" x="90" y="413">Wallet ID:</text>'
                 )
             );
     }
@@ -148,7 +160,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         return
             string(
                 abi.encodePacked(
-                    '<text font-family="sans-serif" letter-spacing=".02em" fill="url(#d)" font-size="16" x="171" y="413">',
+                    '<text font-family="sans-serif" letter-spacing=".02em" fill="url(#d)" font-size="16" x="175" y="413">',
                     getShortenedWalletID(addressToString(originalMinter)),
                     "</text>"
                 )

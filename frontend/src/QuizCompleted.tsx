@@ -1,5 +1,6 @@
 import { Center, Link, Button, HStack, VStack, Text } from "@chakra-ui/react";
-import Card from "./certification.svg";
+import CommonErrorBoundary from "./CommonErrorBoundary";
+import QuizCompletedMintedNFT from "./QuizCompletedMintedNFT";
 
 export default function QuizCompleted() {
     return (
@@ -8,14 +9,9 @@ export default function QuizCompleted() {
             align="start"
             marginTop="16px"
         >
-            <img
-                src={Card}
-                style={{
-                    width: "270px",
-                    display: "block",
-                }}
-                alt="CertificationCard"
-            />
+            <CommonErrorBoundary>
+                <QuizCompletedMintedNFT />
+            </CommonErrorBoundary>
             <VStack
                 width="400px"
                 height="100%"

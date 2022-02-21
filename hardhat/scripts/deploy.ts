@@ -7,12 +7,13 @@ import {
   JPYCQuiz__factory as JPYCQuizFactory,
   JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
 } from '../typechain';
-import { 
-  getSha256Hash, 
-  makeQuestionSelection, 
+import {
+  getSha256Hash,
+  makeQuestionSelection,
   exportJSONString,
+  setEnv,
 } from '../utils/QuizUtils';
-import { PATH_TO_QUIZ_INFO_JSON } from '../settings';
+import { PATH_TO_FRONTEND_ENV, PATH_TO_QUIZ_INFO_JSON } from '../settings';
 
 /***** Change following values based on the specification of your app *****/
 const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon NFT";
@@ -21,18 +22,18 @@ const QUIZ_TITLE = "JPYC Hatkachon テスト";
 // The order of JPYC_QUIZ_QUESTIONS is the actual order shown to users.
 const QUESTIONS = [
   "○ を選択してください。", // Q1
-  "x を選択してください。", // Q2
+  "× を選択してください。", // Q2
   "[長文例] 桜木町の駅に降りたのが、かれこれ九時時分だったので、私達は、先ず暗い波止場に行った。 ○ を選択してください。", // Q3
   "○ を選択してください。", // Q4
-  "x を選択してください。", // Q5
+  "× を選択してください。", // Q5
   "○ を選択してください。", // Q6
   "○ を選択してください。", // Q7
   "○ を選択してください。", // Q8
-  "x を選択してください。", // Q9
-  "x を選択してください。", // Q10
+  "× を選択してください。", // Q9
+  "× を選択してください。", // Q10
 ];
 const MINIMUM_NUMBER_OF_PASS = 7;
-const COMMON_SELECTION_LABELS = ["○", "x"];
+const COMMON_SELECTION_LABELS = ["○", "×"];
 const QUESTION_SELECTIONS_INFO = [
   // Question1
   makeQuestionSelection(
@@ -85,6 +86,9 @@ const QUESTION_SELECTIONS_INFO = [
     1, // solutionIndex
   ),
 ];
+const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = true; // If true, it recreates .env file for front end
+const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = true; // If false, it deploys contracts only
+/**************************************************************************/
 
 async function main() {
   if (QUESTIONS.length !== QUESTION_SELECTIONS_INFO.length) {
@@ -119,13 +123,7 @@ async function main() {
   await JPYCQuizRewardNFT.deployed();
   console.log(`The address of JPYCQuizRewardNFT contract: ${JPYCQuizRewardNFT.address}`);
 
-  const JPYCQuiz = (
-    await upgrades.deployProxy(
-      new JPYCQuizFactory(owner),
-      [JPYCQuizRewardNFT.address],
-      { initializer: 'initialize(address)' }
-    )
-  ) as JPYCQuizType;
+  const JPYCQuiz = await (new JPYCQuizFactory(owner).deploy(JPYCQuizRewardNFT.address));
   await JPYCQuiz.deployed();
   console.log(`The address of JPYCQuiz contract: ${JPYCQuiz.address}`);
 
@@ -163,28 +161,38 @@ async function main() {
   console.log(`Completed setting questions! Outputting quiz info into ${PATH_TO_QUIZ_INFO_JSON}`);
   await exportJSONString(JSON.stringify(generatedQuestions), PATH_TO_QUIZ_INFO_JSON);
 
-  console.log('Answering questions...');
-  const txSetUserAnswerHashes = await JPYCQuiz.connect(quizTaker1).setUserAnswerHashes(
-    answerHashes
-  );
-  await txSetUserAnswerHashes.wait();
+  if (SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT) {
+    console.log('Answering questions...');
+    const txSetUserAnswerHashes = await JPYCQuiz.connect(quizTaker1).setUserAnswerHashes(
+      answerHashes
+    );
+    await txSetUserAnswerHashes.wait();
 
-  const mintedTokenID = (
-    await JPYCQuizRewardNFT.getTokenIDFromMinter(quizTaker1.address)
-  ).toNumber();
-  console.log(`tokenID=${mintedTokenID} was minted for ${quizTaker1.address}`);
+    const mintedTokenID = (
+      await JPYCQuizRewardNFT.getTokenIDFromMinter(quizTaker1.address)
+    ).toNumber();
+    console.log(`tokenID=${mintedTokenID} was minted for ${quizTaker1.address}`);
 
-  const tokenURI = await JPYCQuizRewardNFT.tokenURI(mintedTokenID);
-  console.log("##### Following TokenURI is generated #####");
-  console.log(tokenURI);
-  console.log("###########################################\n");
+    const tokenURI = await JPYCQuizRewardNFT.tokenURI(mintedTokenID);
+    console.log("##### Following TokenURI is generated #####");
+    console.log(tokenURI);
+    console.log("###########################################\n");
 
-  const nftOwner = await JPYCQuizRewardNFT.ownerOf(mintedTokenID);
-  console.log(`The owner of NFT is ${nftOwner}`);
+    const nftOwner = await JPYCQuizRewardNFT.ownerOf(mintedTokenID);
+    console.log(`The owner of NFT is ${nftOwner}`);
+  }
+
+  if (SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END) {
+    const newEnvValues: { [key: string]: string } = {};
+    newEnvValues[`REACT_APP_${network.name.toUpperCase()}_JPYC_QUIZ_ADDRESS`]
+      = JPYCQuiz.address;
+    newEnvValues[`REACT_APP_${network.name.toUpperCase()}_JPYC_QUIZ_REWARD_NFT_ADDRESS`]
+      = JPYCQuizRewardNFT.address;
+    console.log('Setting new env Values for frontend directory', newEnvValues);
+    await setEnv(newEnvValues, PATH_TO_FRONTEND_ENV);
+  }
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

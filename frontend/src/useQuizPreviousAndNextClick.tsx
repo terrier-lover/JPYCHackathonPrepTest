@@ -10,7 +10,7 @@ export default function useQuizPreviousAndNextClick() {
         setCurrentQuestionID 
     } = useQuizStateContext();
     const { questionSize } = useQuizDetailsContext();
-
+    console.log({currentQuestionID});
     const progressValue = (currentQuestionID - 1) / questionSize * 100;
 
     const onPreviousClick = useCallback(() => {
@@ -24,11 +24,11 @@ export default function useQuizPreviousAndNextClick() {
         }
 
         setCurrentQuestionID(currentQuestionID - 1);
-    }, [currentQuestionID]);
+    }, [currentQuestionID, setCurrentQuestionID, setCurrentQuizState]);
 
     const onNextClick = useCallback(() => {
         setCurrentQuestionID(currentQuestionID + 1);
-    }, [currentQuestionID]);
+    }, [currentQuestionID, setCurrentQuestionID]);
     
     const isNextButtonDisabled = questionSize < currentQuestionID;
 

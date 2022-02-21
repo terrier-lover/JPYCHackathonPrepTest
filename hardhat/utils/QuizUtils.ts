@@ -1,6 +1,28 @@
+import type { Data } from 'envfile';
+
 import { ethers } from "hardhat";
 import { ulid } from 'ulid';
 import { promises as fs } from 'fs';
+import { parse, stringify } from 'envfile';
+
+async function setEnv(
+    keyValueMap: { [key: string]: string },
+    path: string,
+) {
+    let envData: Data = {};
+    try {
+        const envRawData = await fs.readFile(path, { encoding: 'utf-8' });
+        envData = parse(envRawData);
+    } catch (error) {
+        console.log(error);
+    }
+
+    Object.keys(keyValueMap).forEach(key => {
+        envData[key] = keyValueMap[key];
+    });
+
+    await fs.writeFile(path, stringify(envData));
+}
 
 function makeQuestionSelection(
     selectionLabels: string[],
@@ -35,4 +57,9 @@ async function exportJSONString(
     await fs.writeFile(path, jsonString);
 }
 
-export { makeQuestionSelection, getSha256Hash, exportJSONString };
+export { 
+    makeQuestionSelection, 
+    getSha256Hash, 
+    exportJSONString,
+    setEnv,
+};

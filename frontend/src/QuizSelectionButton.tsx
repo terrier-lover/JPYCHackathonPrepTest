@@ -41,7 +41,8 @@ export default function QuizSelectionButton({
         setCurrentQuestionID,
         currentQuestionID,
         setAnswer,
-        previousQuestionID
+        previousQuestionID,
+        questionSize,
     ]);
 
     return (

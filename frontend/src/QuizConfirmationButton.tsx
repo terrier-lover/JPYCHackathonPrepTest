@@ -2,33 +2,37 @@ import nullthrows from "nullthrows";
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import QuizActionButton from "./QuizActionButton";
-import { 
-    getContracts, 
-    getSha256Hash, 
-    MUTTION_KEY_GET_SET_USER_ANSWER_HASHES, 
-    notEmpty, 
+import {
+    getContracts,
+    getSha256Hash,
+    MUTTION_KEY_GET_SET_USER_ANSWER_HASHES,
+    notEmpty,
     QUERY_KEY_GET_IS_USER_PASSED
 } from "./QuizContractsUtils";
 import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
 import { useWalletContext } from "./WalletContextProvider";
 import { useToast } from '@chakra-ui/react';
-import { useQuizStateContext } from "./QuizStateContextProvider";
+import { DEFAULT_QUESTION_ID, useQuizStateContext } from "./QuizStateContextProvider";
 import QuizState from "./QuizState";
 
 export default function QuizConfirmationButton() {
-    const { signer } = useWalletContext();
-    const { setCurrentQuizState } = useQuizStateContext();
+    const { signer, currentChainId } = useWalletContext();
+    const { setCurrentQuizState, setCurrentQuestionID } = useQuizStateContext();
     const { answers, questionSize } = useQuizDetailsContext();
 
-    const { jpycQuiz } = getContracts(nullthrows(signer));
+    const { jpycQuiz } = getContracts(
+        nullthrows(signer), 
+        nullthrows(currentChainId)
+    );
     const queryClient = useQueryClient();
 
     const [isTransactionWaiting, setIsTransactionWaiting] = useState(false);
     const toast = useToast();
 
     const answerHashes = answers.map(
-        answer => answer.selectionID == null 
-            ? null: getSha256Hash(answer.selectionID)
+        answer => answer.selectionID == null
+            ? null
+            : getSha256Hash(answer.selectionID)
     )?.filter(notEmpty);
     const answerHashesLength = answerHashes.length;
 
@@ -38,7 +42,6 @@ export default function QuizConfirmationButton() {
             _address: string,
             isSolved: boolean,
         ) => {
-            console.log('isSolved', isSolved);
             setIsTransactionWaiting(false);
             if (!isSolved) {
                 toast({
@@ -48,6 +51,8 @@ export default function QuizConfirmationButton() {
                     duration: 5000,
                     isClosable: true,
                 });
+                setCurrentQuestionID(DEFAULT_QUESTION_ID);
+                setCurrentQuizState(QuizState.TOP);
                 return;
             }
 
@@ -62,7 +67,7 @@ export default function QuizConfirmationButton() {
         return () => {
             jpycQuiz.removeListener(eventKey, listener);
         };
-    }, [jpycQuiz, queryClient]);
+    }, [jpycQuiz, queryClient, setCurrentQuizState, toast]);
 
     const {
         isLoading: isMutationLoading,
@@ -77,7 +82,7 @@ export default function QuizConfirmationButton() {
                     title: '送信完了!',
                     description: "回答を送信しました。確認中のためしばしお待ちください",
                     status: 'success',
-                    duration: 10000,
+                    duration: 20000,
                     isClosable: true,
                 });
 
@@ -92,7 +97,8 @@ export default function QuizConfirmationButton() {
                             isClosable: true,
                         });
                     }).finally(() => {
-                        // setIsTransactionWaiting(false);
+                        // For now, no operation is needed here since 
+                        // it needs to wait for the event to emit the change.
                     });
 
             },
@@ -122,13 +128,13 @@ export default function QuizConfirmationButton() {
         }
 
         mutate();
-    }, [mutate, questionSize, answerHashesLength]);
+    }, [mutate, questionSize, answerHashesLength, toast]);
 
     const hasMissingAnswers = answers.some(answer => answer.selectionID == null);
     const isLoading = isMutationLoading || isTransactionWaiting;
 
     return (
-        <QuizActionButton 
+        <QuizActionButton
             isButtonDisabled={hasMissingAnswers}
             tooltipLabel="全問回答してください"
             buttonLabel="回答を送る"

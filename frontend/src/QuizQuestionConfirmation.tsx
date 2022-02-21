@@ -33,7 +33,7 @@ export default function QuizQuestionConfirmation() {
             setCurrentQuizState(QuizState.COMPLETED);
             return;
         }
-    }, [ isSolved, previousIsSolved ]);    
+    }, [ isSolved, previousIsSolved, setCurrentQuizState ]);    
 
     return (
         <QuizQuestionBase>

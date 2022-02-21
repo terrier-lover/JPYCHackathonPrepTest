@@ -95,6 +95,8 @@ describe("JPYCQuiz.mainFlow.test", () => {
           questionSelections = quizQuestions.questionSelections;
           connectAs = wallets[quizInfo.connectAsWalletIndex];
 
+          await setMintRewardCaller(JPYCQuiz, JPYCQuizRewardNFT);
+
           return {
             questions,
             questionSelections,
@@ -112,8 +114,6 @@ describe("JPYCQuiz.mainFlow.test", () => {
           connectAs = fixtures.connectAs;
           JPYCQuiz = fixtures.JPYCQuiz;
           JPYCQuizRewardNFT = fixtures.JPYCQuizRewardNFT;
-
-          await setMintRewardCaller(JPYCQuiz, JPYCQuizRewardNFT);
         });
 
         it("Quiz event is properly set", async () => {

@@ -1,16 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import {StringsUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import {SafeMathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import {IJPYCQuizRewardNFT} from "./JPYCQuizRewardNFT.sol";
 
-contract JPYCQuiz is Initializable, OwnableUpgradeable {
-    using SafeMathUpgradeable for uint256;
-    using CountersUpgradeable for CountersUpgradeable.Counter;
+contract JPYCQuiz is Ownable {
+    using SafeMath for uint256;
+    using Counters for Counters.Counter;
 
     event LogSetQuestionInfo(uint256 indexed questionId_);
     event LogUserAnswer(address indexed userAddress_, bool hasPassed_);
@@ -47,12 +47,11 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
     // Second map: event versionID to user answer history
     mapping(address => mapping(uint256 => UserAnswerHistory)) _userAnserStatusMap;
     QuizEvent public _quizEvent;
-    address public _mintRewardContract;
-    CountersUpgradeable.Counter private _eventVersionID;
+    IJPYCQuizRewardNFT public _mintRewardContract;
+    Counters.Counter private _eventVersionID;
 
-    function initialize(address mintRewardContract_) public initializer {
-        _mintRewardContract = mintRewardContract_;
-        __Ownable_init();
+    constructor(address mintRewardContract_) {
+        _mintRewardContract = IJPYCQuizRewardNFT(mintRewardContract_);
     }
 
     function getQuizEvent()
@@ -101,29 +100,21 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
             keccak256(abi.encodePacked(a_)) == keccak256(abi.encodePacked(b_));
     }
 
-    function mintReward() private {
-        AddressUpgradeable.functionCall(
-            _mintRewardContract,
-            abi.encodeWithSignature("mint(address)", msg.sender)
-        );
+    function mintReward(bool isAdmin_) private {
+        _mintRewardContract.mintFromRewardCaller(_msgSender());
 
-        emit LogMintReward(msg.sender, true);
+        emit LogMintReward(_msgSender(), isAdmin_);
     }
 
     function ownerMintRewardBypassCheck() public onlyOwner {
-        AddressUpgradeable.functionCall(
-            _mintRewardContract,
-            abi.encodeWithSignature("mint(address)", msg.sender)
-        );
-
-        emit LogMintReward(msg.sender, true);
+        mintReward(true);
     }
 
     function setMintRewardContract(address mintRewardContract_)
         public
         onlyOwner
     {
-        _mintRewardContract = mintRewardContract_;
+        _mintRewardContract = IJPYCQuizRewardNFT(mintRewardContract_);
     }
 
     function setQuestionInfo(
@@ -189,7 +180,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
 
     function getIsUserPassed() public view returns (bool) {
         return
-            _userAnserStatusMap[msg.sender][_eventVersionID.current()]
+            _userAnserStatusMap[_msgSender()][_eventVersionID.current()]
                 .hasSentCorrectAnswer;
     }
 
@@ -200,7 +191,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         );
         require(!getIsUserPassed(), "User already solved this quiz.");
 
-        UserAnswerHistory storage history = _userAnserStatusMap[msg.sender][
+        UserAnswerHistory storage history = _userAnserStatusMap[_msgSender()][
             _eventVersionID.current()
         ];
 
@@ -218,7 +209,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
 
         bool hasPassed = numOfCorrectAnswers >= _quizEvent.minNumOfPasses;
         if (hasPassed) {
-            mintReward();
+            mintReward(false);
             history.hasSentCorrectAnswer = hasPassed;
         }
 
@@ -226,7 +217,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
             UserAnswer({hasPassed: hasPassed, hashes: answerHashes_})
         );
 
-        emit LogUserAnswer(msg.sender, hasPassed);
+        emit LogUserAnswer(_msgSender(), hasPassed);
     }
 
     function setQuizEnd(bool quizEnded_) public onlyOwner {
@@ -246,7 +237,7 @@ contract JPYCQuiz is Initializable, OwnableUpgradeable {
         view
         returns (bool hasSentCorrectAnswer, bool[] memory hasPassedList)
     {
-        UserAnswerHistory memory history = _userAnserStatusMap[msg.sender][
+        UserAnswerHistory memory history = _userAnserStatusMap[_msgSender()][
             _eventVersionID.current()
         ];
         hasSentCorrectAnswer = history.hasSentCorrectAnswer;

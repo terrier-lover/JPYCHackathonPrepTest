@@ -1,10 +1,8 @@
-import { useWeb3 } from '@3rdweb/hooks';
-import { usePrevious } from '@chakra-ui/react';
 import type { JsonRpcSigner } from '@ethersproject/providers'
 
+import { useWeb3 } from '@3rdweb/hooks';
 import nullthrows from "nullthrows";
-import React from 'react';
-import { ReactNode, createContext, useContext, useEffect, useRef } from "react";
+import { ReactNode, createContext, useContext, } from "react";
 
 interface WalletContextDataType {
     currentAddress: string | null,
@@ -32,33 +30,13 @@ function WalletContextProvider({
     } = useWeb3();
     const signer = provider?.getSigner();
 
-    const fragmentKeyRef = useRef(0);
-    const previousAddress = usePrevious(currentAddress);
-
-    useEffect(() => {
-        if (currentAddress == null || previousAddress == null) {
-            return;
-        }
-        if (previousAddress < currentAddress) {
-            fragmentKeyRef.current = fragmentKeyRef.current + 1
-        }
-    }, [previousAddress, currentAddress]);
-
-    useEffect(() => {
-        return () => {
-            fragmentKeyRef.current = 0;
-        };
-    }, []);
-
     return (
         <WalletContext.Provider value={{
             currentAddress: currentAddress ?? null,
             currentChainId: currentChainId ?? null,
             signer: signer ?? null,
         }}>
-            <React.Fragment key={`fragmentKey-${fragmentKeyRef.current}`}>
-                {children}
-            </React.Fragment>
+            {children}
         </WalletContext.Provider>
     );
 }

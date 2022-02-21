@@ -49,8 +49,8 @@ function QuizDetailsContextProvider({
     isUserPassed: boolean,
 }) {
     const { currentQuizState } = useQuizStateContext();
-
     const [answers, setAnswers] = useState(emptyAnswers);
+
     const isSolved = isUserPassed || currentQuizState === QuizState.COMPLETED;
 
     const setAnswer = useCallback((newAnswer: AnswerType) => {

@@ -5,19 +5,21 @@ import { Center, Spinner } from "@chakra-ui/react";
 import { useWalletContext } from "./WalletContextProvider";
 import nullthrows from "nullthrows";
 import { useQueries } from "react-query";
-import { getContracts, QUERY_KEY_GET_QUIZ_EVENT, DEFAULT_RETRY, QUERY_KEY_GET_IS_USER_PASSED, QUERY_KEY_GET_QUESTION_INFO, notEmpty } from "./QuizContractsUtils";
+import { 
+    getContracts, 
+    QUERY_KEY_GET_QUIZ_EVENT,
+    DEFAULT_RETRY, 
+    QUERY_KEY_GET_IS_USER_PASSED, 
+    QUERY_KEY_GET_QUESTION_INFO, 
+    notEmpty,
+} from "./QuizContractsUtils";
 import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { useQuizStateContext } from "./QuizStateContextProvider";
 import QuizState from "./QuizState";
 
 export default function QuizContainer({ children }: { children: ReactNode }) {
-    // Check the state of quiz
-    // 1. Not connected to wallet -> show top page
-    // 2. Connected to wallet 
-    //    2.1 not solved the question yet -> show button to start quiz
-    //    2.2 solved the question -> if user clicks begins test, go to final page
-
     const { currentAddress } = useWalletContext();
+
     if (currentAddress == null) {
         return <>{children}</>;
     }
@@ -26,10 +28,16 @@ export default function QuizContainer({ children }: { children: ReactNode }) {
 }
 
 function QuizDetailsContainer({ children }: { children: ReactNode }) {
-    const { signer: signerNullable } = useWalletContext();
+    const { 
+        signer: signerNullable,
+        currentAddress: currentAddressNullable,
+        currentChainId: currentChainIdNullable,
+     } = useWalletContext();
     const signer = nullthrows(signerNullable);
+    const currentAddress = nullthrows(currentAddressNullable);
+    const currentChainId = nullthrows(currentChainIdNullable);
 
-    const { jpycQuiz } = getContracts(signer);
+    const { jpycQuiz } = getContracts(signer, currentChainId);
     const getQuizEvent = jpycQuiz.getQuizEvent();
     const getIsUserPassed = jpycQuiz.getIsUserPassed();
 
@@ -70,11 +78,8 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
             queryKey: `${QUERY_KEY_GET_QUESTION_INFO}-${questionID}`,
             queryFn: () => getQuestionInfo,
             retry: DEFAULT_RETRY,
-            enabled:
-                numOfQuestions != null
-                && isUserPassed === false
-                && isFirstSuccess,
             refetchOnWindowFocus: false,
+            enabled: numOfQuestions != null && isFirstSuccess,
         };
     });
 
@@ -129,16 +134,18 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
 
     const { currentQuizState, setCurrentQuizState } = useQuizStateContext();  
     useEffect(() => {
-        if (
-            shouldShowLoadingState 
-            || shouldShowErrorState 
-            || currentQuizState !== QuizState.TOP
-        ) {
+        if (shouldShowLoadingState || shouldShowErrorState) {
             return;
         }
 
-        if (isUserPassed === true) {
-            setCurrentQuizState(QuizState.COMPLETED);
+        if (isUserPassed) {
+            if (currentQuizState === QuizState.TOP) {
+                setCurrentQuizState(QuizState.COMPLETED);
+            }
+        } else {
+            if (currentQuizState === QuizState.COMPLETED) {
+                setCurrentQuizState(QuizState.TOP);
+            }
         }
     }, [
         currentQuizState, 
@@ -167,6 +174,7 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
             emptyAnswers={memoizedEmptyAnswers}
             questions={memoizedQuestions}
             isUserPassed={isUserPassed ?? false}
+            key={`QuizDetailsContextProvider-${currentAddress}`}
         >
             {children}
         </QuizDetailsContextProvider>

@@ -28,6 +28,7 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "getTokenIDFromMinter(address)": FunctionFragment;
+    "getTokenURIForMinter(address)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "mint(address)": FunctionFragment;
     "name()": FunctionFragment;
@@ -69,6 +70,10 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getTokenIDFromMinter",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTokenURIForMinter",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -144,6 +149,10 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getTokenIDFromMinter",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getTokenURIForMinter",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -301,6 +310,11 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    getTokenURIForMinter(
+      minterAddress_: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     isApprovedForAll(
       owner: string,
       operator: string,
@@ -410,6 +424,11 @@ export class JPYCQuizRewardNFT extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  getTokenURIForMinter(
+    minterAddress_: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   isApprovedForAll(
     owner: string,
     operator: string,
@@ -512,6 +531,11 @@ export class JPYCQuizRewardNFT extends BaseContract {
       minter_: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getTokenURIForMinter(
+      minterAddress_: string,
+      overrides?: CallOverrides
+    ): Promise<string>;
 
     isApprovedForAll(
       owner: string,
@@ -690,6 +714,11 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getTokenURIForMinter(
+      minterAddress_: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     isApprovedForAll(
       owner: string,
       operator: string,
@@ -803,6 +832,11 @@ export class JPYCQuizRewardNFT extends BaseContract {
 
     getTokenIDFromMinter(
       minter_: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getTokenURIForMinter(
+      minterAddress_: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

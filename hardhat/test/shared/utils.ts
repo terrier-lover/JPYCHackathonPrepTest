@@ -2,13 +2,12 @@ import type {
     JPYCQuiz as JPYCQuizType,
     JPYCQuizRewardNFT as JPYCQuizRewardNFTType,
 } from "../../typechain";
-import type { 
-    Signer, 
-    ContractTransaction as ContractTransactionType 
+import type {
+    Signer,
+    ContractTransaction as ContractTransactionType
 } from "ethers";
 
 import { expect } from "chai";
-import { upgrades } from "hardhat";
 import {
     JPYCQuiz__factory as JPYCQuizFactory,
     JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
@@ -22,7 +21,7 @@ async function setMintRewardCaller(
     const txSetMintRewardCaller = await JPYCQuizRewardNFT.setMintRewardCaller(
         JPYCQuiz.address,
     );
-    await txSetMintRewardCaller.wait();
+    return await txSetMintRewardCaller.wait();
 }
 
 async function setQuizEventAndQuestionsSkelton(
@@ -128,14 +127,11 @@ async function deployJPYCQuiz(
     JPYCQuizRewardNFT: JPYCQuizRewardNFTType,
     signer: Signer,
 ) {
-    const JPYCQuiz = (
-        await upgrades.deployProxy(
-            new JPYCQuizFactory(signer),
-            [JPYCQuizRewardNFT.address],
-            { initializer: 'initialize(address)' }
+    const JPYCQuiz = await (
+        new JPYCQuizFactory(signer).deploy(
+            JPYCQuizRewardNFT.address
         )
-    ) as JPYCQuizType;
-
+    );
     await JPYCQuiz.deployed();
 
     return JPYCQuiz;
@@ -203,10 +199,10 @@ async function testGetNFT(options: {
     nextTokenID: number,
     transaction: Promise<ContractTransactionType>,
 }) {
-    const { 
-        JPYCQuiz, 
+    const {
+        JPYCQuiz,
         JPYCQuizRewardNFT,
-        connectAs, 
+        connectAs,
         nextTokenID,
         transaction,
     } = options;

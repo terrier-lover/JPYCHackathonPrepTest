@@ -36,7 +36,7 @@ function Navigation() {
   const { setCurrentQuizState } = useQuizStateContext();
   const onClickTopPage = useCallback(() => {
     setCurrentQuizState(QuizState.TOP);
-  }, []);
+  }, [ setCurrentQuizState ]);
 
   const LinkInfo = [
     {
