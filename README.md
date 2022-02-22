@@ -9,8 +9,8 @@
     - [ethers](https://www.npmjs.com/package/ethers)
     - [@3rdweb/react](https://www.npmjs.com/package/@3rdweb/react)
   - スマートコントラクト
-    - [@openzeppelin/contracts] (https://www.npmjs.com/package/@openzeppelin/contracts)
-    - [base64-sol] (https://www.npmjs.com/package/base64-sol/v/1.0.1)
+    - [@openzeppelin/contracts](https://www.npmjs.com/package/@openzeppelin/contracts)
+    - [base64-sol](https://www.npmjs.com/package/base64-sol/v/1.0.1)
 - 管理者向け機能
   - 質問内容・正解をスマートコントラクトにて追加・変更可能
   - 質問数は自由に設定可能
@@ -33,7 +33,18 @@ NFTのオーナー情報等が JPYCQuizRewardNFT.sol にて保存されるため
 
 
 ### Web ページ
+#### 利用ライブラリ
+- ステート管理
+  - [React Context](https://reactjs.org/docs/context.html)
+- データフェッチング
+  - [React Query](https://react-query.tanstack.com/overview)
+- ブロックチェーン関連
+  - [ethers](https://www.npmjs.com/package/ethers)
+  - [@3rdweb/react](https://www.npmjs.com/package/@3rdweb/react)
+- デザイン
+  - [Chakra UI](https://chakra-ui.com/docs/getting-started) (\*2)
 
+(\*2) @3rdweb/react が Chakra UI を内部で利用してるため、Chakra UIのデザインに従いました
 
-# テストページ(未完成)
+# テストページ
 https://terrier-lover.github.io/jpyc_hack_prep_test_page/
