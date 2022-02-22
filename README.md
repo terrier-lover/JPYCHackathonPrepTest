@@ -1,5 +1,8 @@
 # 日本円ハッカソン事前テスト　出題用Webページ
 
+## テストページ
+https://terrier-lover.github.io/jpyc_hack_prep_test_page/
+
 ## システム概要
 - 構成
   - Web ページ (React, Typescript)
@@ -46,5 +49,53 @@ NFTのオーナー情報等が JPYCQuizRewardNFT.sol にて保存されるため
 
 (\*2) @3rdweb/react が Chakra UI を内部で利用してるため、Chakra UIのデザインに従いました
 
-# テストページ
-https://terrier-lover.github.io/jpyc_hack_prep_test_page/
+## インストール方法
+```
+$ git clone https://github.com/terrier-lover/rewards_distributer.git
+```
+
+## 準備
+
+## hardhat/.env
+hardhat/.env.example を参照し、以下パラメータを指定してください。
+- RINKEBY_URL
+  - **必須項目** 
+- RINKEBY_PRIVATE_KEY_OWNER
+  - **必須項目** 
+- RINKEBY_PRIVATE_KEY_OTHER1
+  - **必須項目** 
+
+## hardhat/hardhat.config.ts
+Hardhatの設定ファイル。変更はオプショナル。
+
+## frontend/src/CustomInputs.ts
+Rinkeby以外のネットワークを利用する場合、以下項目を変更してください。
+- SUPPORTED_CHAIN_IDS_IN_WEB
+  - SUPPORTED_CHAIN_IDS_IN_WEB
+  - どのネットワークのチェインIDをサポートするか指定します
+- NETWORK_NAMES, CHAIN_IDS, CHAINS_IDS_AND_NETWORK_NAME_MAPPINGS
+  - **オプショナル**　
+
+## Hardhat & Frontend, npm installation
+- $ cd frontend
+- $ npm install
+- $ cd hardhat
+- $ npm install
+
+## Hardhat, deploy
+- $ cd hardhat 
+- Prepare .env using .env.example.  
+
+If you want to use localnet, do followings:
+- $ npx hardhat node
+- $ npx hardhat run scripts/deploy.ts --network localhost
+
+Whenever hardhat compiles and produces new typechains (this is exported under ./hardhat/typechain), copy typechains in hardhat/typechain/ to /frontend/src/typechain/ so that frontend code can use latest definitions. In addition, change the front-end codebase accordingly.
+
+## Frontend, prepare webserver
+- $ cd frontend
+- $ npm start
+
+# How to test
+- cd hardhat
+- npx hardhat test
