@@ -49,14 +49,13 @@ NFTのオーナー情報等が JPYCQuizRewardNFT.sol にて保存されるため
 
 (\*2) @3rdweb/react が Chakra UI を内部で利用してるため、Chakra UIのデザインに従いました
 
-## インストール方法
+## 各種操作情報
+### ソースコードインストール
 ```
 $ git clone https://github.com/terrier-lover/rewards_distributer.git
 ```
 
-## 準備
-
-## hardhat/.env
+### hardhat/.env
 hardhat/.env.example を参照し、以下パラメータを指定してください。
 - RINKEBY_URL
   - **必須項目** Rinkeby URL
@@ -65,30 +64,30 @@ hardhat/.env.example を参照し、以下パラメータを指定してくだ�
 - RINKEBY_PRIVATE_KEY_OTHER1
   - **オプショナル** ユーザーとしてクイズを解くアカウント(EOA)を指定します
 
-## hardhat/hardhat.config.ts
+### hardhat/hardhat.config.ts
 **オプショナル**　Hardhatの設定ファイル。
 
-## frontend/src/CustomInputs.ts
+### frontend/src/CustomInputs.ts
 Rinkeby以外のネットワークを利用する場合、以下項目を変更してください。
 - SUPPORTED_CHAIN_IDS_IN_WEB
   - **オプショナル** どのネットワークのチェインIDをサポートするか指定します
 - NETWORK_NAMES, CHAIN_IDS, CHAINS_IDS_AND_NETWORK_NAME_MAPPINGS
   - **オプショナル** 新たにネットワークを指定する際に変更が必要です
 
-## Hardhatとフロントのソースコードインストール
-### フロントエンド
+### Hardhatとフロントのソースコードインストール
+#### フロントエンド
 ```
 $ cd frontend
 $ npm install
 ```
 
-### Hardhat
+#### Hardhat
 ```
 $ cd hardhat
 $ npm install
 ```
 
-## スマートコントラクトのデプロイ
+### スマートコントラクトのデプロイ
 ```
 $ cd hardhat 
 ```
@@ -120,7 +119,7 @@ $ cd frontend
 $ npm start
 ```
 
-## Hardhat　テスト方法
+### Hardhat　テスト方法
 ```
 $ cd hardhat
 $ npx hardhat test
