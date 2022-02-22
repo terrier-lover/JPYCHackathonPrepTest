@@ -8,6 +8,7 @@ import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "hardhat-contract-sizer";
 import { ENV } from './settings';
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -35,7 +36,6 @@ const config: HardhatUserConfig = {
             ENV.RINKEBY_PRIVATE_KEY_OTHER1 == null
             ? null : ENV.RINKEBY_PRIVATE_KEY_OTHER1,
         ].filter(notEmpty),
-      // chainId: CHAIN_IDS.RINKEBY,
     },
   },
   gasReporter: {

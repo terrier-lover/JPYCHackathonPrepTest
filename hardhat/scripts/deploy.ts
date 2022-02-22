@@ -82,8 +82,8 @@ const QUESTION_SELECTIONS_INFO = [
     1, // solutionIndex
   ),
 ];
-const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = true; // If true, it recreates .env file for front end
-const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = true; // If false, it deploys contracts only
+const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = false; // If true, it recreates .env file for front end
+const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = false; // If false, it deploys contracts only
 /**************************************************************************/
 
 async function main() {
@@ -105,9 +105,8 @@ async function main() {
   console.log(JSON.stringify(generatedQuestions));
   console.log("####################################\n");
 
-  const [owner, quizTaker1] = await ethers.getSigners();
+  const [owner] = await ethers.getSigners();
   console.log(`The address of contract owner: ${owner.address}`);
-  console.log(`The address of example quiz taker: ${quizTaker1.address}`);
 
   const JPYCQuizRewardNFT = await (
     new JPYCQuizRewardNFTFactory(owner).deploy(
@@ -158,6 +157,9 @@ async function main() {
   await exportJSONString(JSON.stringify(generatedQuestions), PATH_TO_QUIZ_INFO_JSON);
 
   if (SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT) {
+    const [_, quizTaker1] = await ethers.getSigners();    
+    console.log(`The address of quiz taker: ${quizTaker1.address}`);
+
     console.log('Answering questions...');
     const txSetUserAnswerHashes = await JPYCQuiz.connect(quizTaker1).setUserAnswerHashes(
       answerHashes
