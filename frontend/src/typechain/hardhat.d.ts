@@ -81,6 +81,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.JPYCQuiz__factory>;
     getContractFactory(
+      name: "IJPYCQuizRewardNFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IJPYCQuizRewardNFT__factory>;
+    getContractFactory(
       name: "JPYCQuizRewardNFT",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.JPYCQuizRewardNFT__factory>;
@@ -170,6 +174,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.JPYCQuiz>;
+    getContractAt(
+      name: "IJPYCQuizRewardNFT",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IJPYCQuizRewardNFT>;
     getContractAt(
       name: "JPYCQuizRewardNFT",
       address: string,

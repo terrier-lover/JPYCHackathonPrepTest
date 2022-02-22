@@ -9,10 +9,18 @@ export default function QuizWeb3Root() {
     const previousAddress = usePrevious(currentAddress);
 
     useEffect(() => {
-        if (currentAddress == null || previousAddress == null) {
+        // When switching from Wallet to wallet
+        if (
+            previousAddress != null 
+            && currentAddress != null 
+            && previousAddress !== currentAddress
+        ) {
+            window.location.reload();
             return;
         }
-        if (previousAddress !== currentAddress) {
+        // When locking the current wallet
+        if (previousAddress != null && currentAddress == null) {
+            console.log('locking the current wallet');
             window.location.reload();
             return;
         }

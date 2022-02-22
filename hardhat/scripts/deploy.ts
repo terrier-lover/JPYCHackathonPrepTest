@@ -1,8 +1,4 @@
-import type {
-  JPYCQuiz as JPYCQuizType,
-} from "../typechain";
-
-import { ethers, upgrades, network } from "hardhat";
+import { ethers, network } from "hardhat";
 import {
   JPYCQuiz__factory as JPYCQuizFactory,
   JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
@@ -16,8 +12,8 @@ import {
 import { PATH_TO_FRONTEND_ENV, PATH_TO_QUIZ_INFO_JSON } from '../settings';
 
 /***** Change following values based on the specification of your app *****/
-const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon NFT";
-const JPYC_HACHATHON_NFT_SYMBOL = "JPYCHACK";
+const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon Certification Test";
+const JPYC_HACHATHON_NFT_SYMBOL = "JPYCHACKCERT_TEST";
 const QUIZ_TITLE = "JPYC Hatkachon テスト";
 // The order of JPYC_QUIZ_QUESTIONS is the actual order shown to users.
 const QUESTIONS = [

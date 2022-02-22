@@ -28,7 +28,6 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     "getIsUserPassed()": FunctionFragment;
     "getQuestionInfo(uint256)": FunctionFragment;
     "getQuizEvent()": FunctionFragment;
-    "initialize(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerMintRewardBypassCheck()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
@@ -71,7 +70,6 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     functionFragment: "getQuizEvent",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "initialize", values: [string]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "ownerMintRewardBypassCheck",
@@ -137,7 +135,6 @@ interface JPYCQuizInterface extends ethers.utils.Interface {
     functionFragment: "getQuizEvent",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "ownerMintRewardBypassCheck",
@@ -304,11 +301,6 @@ export class JPYCQuiz extends BaseContract {
       }
     >;
 
-    initialize(
-      mintRewardContract_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     ownerMintRewardBypassCheck(
@@ -422,11 +414,6 @@ export class JPYCQuiz extends BaseContract {
     }
   >;
 
-  initialize(
-    mintRewardContract_: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   owner(overrides?: CallOverrides): Promise<string>;
 
   ownerMintRewardBypassCheck(
@@ -539,11 +526,6 @@ export class JPYCQuiz extends BaseContract {
         quizEnded: boolean;
       }
     >;
-
-    initialize(
-      mintRewardContract_: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -674,11 +656,6 @@ export class JPYCQuiz extends BaseContract {
 
     getQuizEvent(overrides?: CallOverrides): Promise<BigNumber>;
 
-    initialize(
-      mintRewardContract_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     ownerMintRewardBypassCheck(
@@ -765,11 +742,6 @@ export class JPYCQuiz extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getQuizEvent(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    initialize(
-      mintRewardContract_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

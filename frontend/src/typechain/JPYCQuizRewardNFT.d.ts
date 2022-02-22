@@ -30,7 +30,7 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     "getTokenIDFromMinter(address)": FunctionFragment;
     "getTokenURIForMinter(address)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "mint(address)": FunctionFragment;
+    "mintFromRewardCaller(address)": FunctionFragment;
     "name()": FunctionFragment;
     "originalMinterToTokenIDMap(address)": FunctionFragment;
     "owner()": FunctionFragment;
@@ -80,7 +80,10 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     functionFragment: "isApprovedForAll",
     values: [string, string]
   ): string;
-  encodeFunctionData(functionFragment: "mint", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "mintFromRewardCaller",
+    values: [string]
+  ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "originalMinterToTokenIDMap",
@@ -159,7 +162,10 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     functionFragment: "isApprovedForAll",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "mintFromRewardCaller",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "originalMinterToTokenIDMap",
@@ -321,7 +327,7 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    mint(
+    mintFromRewardCaller(
       destination_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -435,7 +441,7 @@ export class JPYCQuizRewardNFT extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  mint(
+  mintFromRewardCaller(
     destination_: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -543,7 +549,10 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    mint(destination_: string, overrides?: CallOverrides): Promise<void>;
+    mintFromRewardCaller(
+      destination_: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     name(overrides?: CallOverrides): Promise<string>;
 
@@ -725,7 +734,7 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    mint(
+    mintFromRewardCaller(
       destination_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -846,7 +855,7 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    mint(
+    mintFromRewardCaller(
       destination_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

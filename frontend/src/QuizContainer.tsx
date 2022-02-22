@@ -21,7 +21,15 @@ export default function QuizContainer({ children }: { children: ReactNode }) {
     const { currentAddress } = useWalletContext();
 
     if (currentAddress == null) {
-        return <>{children}</>;
+        return (
+            <QuizDetailsContextProvider
+                emptyAnswers={[]}
+                questions={[]}
+                isUserPassed={false}
+            >
+                {children}
+            </QuizDetailsContextProvider>
+        );
     }
 
     return <QuizDetailsContainer>{children}</QuizDetailsContainer>;
@@ -30,11 +38,9 @@ export default function QuizContainer({ children }: { children: ReactNode }) {
 function QuizDetailsContainer({ children }: { children: ReactNode }) {
     const { 
         signer: signerNullable,
-        currentAddress: currentAddressNullable,
         currentChainId: currentChainIdNullable,
      } = useWalletContext();
     const signer = nullthrows(signerNullable);
-    const currentAddress = nullthrows(currentAddressNullable);
     const currentChainId = nullthrows(currentChainIdNullable);
 
     const { jpycQuiz } = getContracts(signer, currentChainId);

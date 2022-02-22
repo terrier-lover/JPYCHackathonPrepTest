@@ -4,6 +4,7 @@ import QuizQuestion from "./QuizQuestion";
 import QuizCompleted from "./QuizCompleted";
 import { useQuizStateContext } from "./QuizStateContextProvider";
 import QuizComponentAnimatePresense from "./QuizComponentAnimatePresense";
+import CommonErrorBoundary from "./CommonErrorBoundary";
 
 export default function QuizComponent() {
     const { currentQuizState } = useQuizStateContext();
@@ -11,13 +12,13 @@ export default function QuizComponent() {
     let component;
     switch (currentQuizState) {
         case QuizState.TOP:
-            component = <QuizTop />;
+            component = <CommonErrorBoundary><QuizTop /></CommonErrorBoundary>;
             break;
         case QuizState.QUESTIONS:
-            component = <QuizQuestion />;
+            component = <CommonErrorBoundary><QuizQuestion /></CommonErrorBoundary>;
             break;
         case QuizState.COMPLETED:
-            component = <QuizCompleted />;
+            component = <CommonErrorBoundary><QuizCompleted /></CommonErrorBoundary>;
             break;
     }
 

@@ -93,12 +93,14 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
 
     function getJsonByte(uint256 tokenId_, string memory svg_)
         private
-        pure
+        view
         returns (bytes memory)
     {
         return
             abi.encodePacked(
-                '{"name": "JPYC hackathon certification #',
+                '{"name": "',
+                name(),
+                ' #',
                 Strings.toString(tokenId_),
                 '", "description": "This NFT certifies that the original minter is eligible for JPYC hackathon.", "image": "data:image/svg+xml;base64,',
                 Base64.encode(bytes(svg_)),

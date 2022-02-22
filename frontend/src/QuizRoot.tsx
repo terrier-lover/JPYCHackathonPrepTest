@@ -1,17 +1,15 @@
+import CommonErrorBoundary from "./CommonErrorBoundary";
 import Navigation from "./Navigation";
 import QuizComponent from "./QuizComponent";
-import QuizComponentAnimatePresense from "./QuizComponentAnimatePresense";
 import QuizContainer from "./QuizContainer";
 import QuizLayout from "./QuizLayout";
 
 export default function QuizRoot() {
     return (
         <QuizLayout>
-            <Navigation />
+            <CommonErrorBoundary><Navigation /></CommonErrorBoundary>
             <QuizContainer>
-                <QuizComponentAnimatePresense>
-                    <QuizComponent />
-                </QuizComponentAnimatePresense>
+                <CommonErrorBoundary><QuizComponent /></CommonErrorBoundary>
             </QuizContainer>
         </QuizLayout>
     );

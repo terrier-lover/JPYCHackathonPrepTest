@@ -1,29 +1,25 @@
-import nullthrows from "nullthrows";
+import type { JPYCQuiz } from "./typechain";
+
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import QuizActionButton from "./QuizActionButton";
 import {
-    getContracts,
     getSha256Hash,
     MUTTION_KEY_GET_SET_USER_ANSWER_HASHES,
     notEmpty,
     QUERY_KEY_GET_IS_USER_PASSED
 } from "./QuizContractsUtils";
 import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
 import { useToast } from '@chakra-ui/react';
 import { DEFAULT_QUESTION_ID, useQuizStateContext } from "./QuizStateContextProvider";
 import QuizState from "./QuizState";
 
-export default function QuizConfirmationButton() {
-    const { signer, currentChainId } = useWalletContext();
+
+export default function QuizConfirmationButton(
+    { jpycQuiz } : { jpycQuiz: JPYCQuiz }
+) {
     const { setCurrentQuizState, setCurrentQuestionID } = useQuizStateContext();
     const { answers, questionSize } = useQuizDetailsContext();
-
-    const { jpycQuiz } = getContracts(
-        nullthrows(signer), 
-        nullthrows(currentChainId)
-    );
     const queryClient = useQueryClient();
 
     const [isTransactionWaiting, setIsTransactionWaiting] = useState(false);

@@ -1,10 +1,13 @@
 import { Table, Thead, Tr, Th, Tbody, Center, Link, Td, Text, usePrevious } from "@chakra-ui/react";
 import { useCallback, useEffect } from "react";
+import CommonErrorBoundary from "./CommonErrorBoundary";
 import QuizConfirmationButton from "./QuizConfirmationButton";
+import { getContracts } from "./QuizContractsUtils";
 import { AnswerType, QuestionType, useQuizDetailsContext } from "./QuizDetailsContextProvider";
 import QuizQuestionBase from "./QuizQuestionBase";
 import QuizState from "./QuizState";
 import { useQuizStateContext } from "./QuizStateContextProvider";
+import { useWalletContext } from "./WalletContextProvider";
 
 export default function QuizQuestionConfirmation() {
     const { setCurrentQuizState } = useQuizStateContext();
@@ -16,6 +19,13 @@ export default function QuizQuestionConfirmation() {
 
     const { isSolved } = useQuizDetailsContext();
     const previousIsSolved = usePrevious(isSolved);
+
+    const { signer, currentChainId } = useWalletContext();    
+    const contracts = 
+        signer != null && currentChainId != null 
+        ? getContracts(signer, currentChainId) 
+        : null;
+    const jpycQuiz = contracts?.jpycQuiz;
 
     useEffect(() => {
         if (!isSolved) {
@@ -76,7 +86,13 @@ export default function QuizQuestionConfirmation() {
             </div>
             <ScrollBottomShadow />
             <Center>
-                <QuizConfirmationButton />
+                <CommonErrorBoundary>
+                    {
+                        jpycQuiz != null 
+                            ? <QuizConfirmationButton jpycQuiz={jpycQuiz} />
+                            : null
+                    }
+                </CommonErrorBoundary>
             </Center>
         </QuizQuestionBase>
     );
