@@ -59,22 +59,21 @@ $ git clone https://github.com/terrier-lover/rewards_distributer.git
 ## hardhat/.env
 hardhat/.env.example を参照し、以下パラメータを指定してください。
 - RINKEBY_URL
-  - **必須項目** 
+  - **必須項目** Rinkeby URL
 - RINKEBY_PRIVATE_KEY_OWNER
-  - **必須項目** 
+  - **必須項目** コントラクトをデプロイするアカウント(EOA)を指定します
 - RINKEBY_PRIVATE_KEY_OTHER1
-  - **必須項目** 
+  - **オプショナル** ユーザーとしてクイズを解くアカウント(EOA)を指定します
 
 ## hardhat/hardhat.config.ts
-Hardhatの設定ファイル。変更はオプショナル。
+**オプショナル**　Hardhatの設定ファイル。
 
 ## frontend/src/CustomInputs.ts
 Rinkeby以外のネットワークを利用する場合、以下項目を変更してください。
 - SUPPORTED_CHAIN_IDS_IN_WEB
-  - SUPPORTED_CHAIN_IDS_IN_WEB
-  - どのネットワークのチェインIDをサポートするか指定します
+  - **オプショナル** どのネットワークのチェインIDをサポートするか指定します
 - NETWORK_NAMES, CHAIN_IDS, CHAINS_IDS_AND_NETWORK_NAME_MAPPINGS
-  - **オプショナル**　
+  - **オプショナル** 新たにネットワークを指定する際に変更が必要です
 
 ## Hardhat & Frontend, npm installation
 - $ cd frontend
