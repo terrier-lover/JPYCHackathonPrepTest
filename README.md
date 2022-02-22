@@ -75,26 +75,53 @@ Rinkeby以外のネットワークを利用する場合、以下項目を変更�
 - NETWORK_NAMES, CHAIN_IDS, CHAINS_IDS_AND_NETWORK_NAME_MAPPINGS
   - **オプショナル** 新たにネットワークを指定する際に変更が必要です
 
-## Hardhat & Frontend, npm installation
-- $ cd frontend
-- $ npm install
-- $ cd hardhat
-- $ npm install
+## Hardhat & Frontend, npm インストール
+### フロントエンド
+```
+$ cd frontend
+$ npm install
+```
 
-## Hardhat, deploy
-- $ cd hardhat 
-- Prepare .env using .env.example.  
+### Hardhat
+```
+$ cd hardhat
+$ npm install
+```
 
-If you want to use localnet, do followings:
-- $ npx hardhat node
-- $ npx hardhat run scripts/deploy.ts --network localhost
+## Hardhat, デプロイ
+```
+$ cd hardhat 
+```
+**ここで .env ファイルを準備してください**
 
-Whenever hardhat compiles and produces new typechains (this is exported under ./hardhat/typechain), copy typechains in hardhat/typechain/ to /frontend/src/typechain/ so that frontend code can use latest definitions. In addition, change the front-end codebase accordingly.
+### Rinkebyでのデプロイ
+```
+$ npx hardhat run scripts/deploy.ts --network rinkeby
+```
 
-## Frontend, prepare webserver
-- $ cd frontend
-- $ npm start
+### ローカルでのデプロイ
+```
+$ npx hardhat node
+$ npx hardhat run scripts/deploy.ts --network localhost
+```
 
-# How to test
-- cd hardhat
-- npx hardhat test
+## Hardhat, コンパイルもしくはデプロイ時
+hardhat/typechain以下にTypeScriptで用いられるタイプ情報が自動生成されます。
+hardhat/typechain/ 以下のファイルを frontend/src/typechain/ にコピーしてください。
+
+```
+cd [本ソースコードをインストールしたルートディレクトリ]
+cp -R hardhat/typechain/* frontend/src/typechain/
+```
+
+## Frontend, Webサーバーの準備
+```
+$ cd frontend
+$ npm start
+```
+
+# Hardhat, test 方法
+```
+cd hardhat
+npx hardhat test
+```
