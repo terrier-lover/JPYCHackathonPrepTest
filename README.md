@@ -75,7 +75,7 @@ Rinkeby以外のネットワークを利用する場合、以下項目を変更�
 - NETWORK_NAMES, CHAIN_IDS, CHAINS_IDS_AND_NETWORK_NAME_MAPPINGS
   - **オプショナル** 新たにネットワークを指定する際に変更が必要です
 
-## Hardhat & Frontend, npm インストール
+## Hardhatとフロントのソースコードインストール
 ### フロントエンド
 ```
 $ cd frontend
@@ -88,7 +88,7 @@ $ cd hardhat
 $ npm install
 ```
 
-## Hardhat, デプロイ
+## スマートコントラクトのデプロイ
 ```
 $ cd hardhat 
 ```
@@ -105,8 +105,8 @@ $ npx hardhat node
 $ npx hardhat run scripts/deploy.ts --network localhost
 ```
 
-## Hardhat, コンパイルもしくはデプロイ時
-hardhat/typechain以下にTypeScriptで用いられるタイプ情報が自動生成されます。
+### Hardhat　コンパイルもしくはデプロイ後の必須アクション
+スマートコントラクトに変更をした場合、hardhat/typechain以下にTypeScriptで用いられるタイプ情報が自動生成されます。
 hardhat/typechain/ 以下のファイルを frontend/src/typechain/ にコピーしてください。
 
 ```
@@ -114,13 +114,13 @@ cd [本ソースコードをインストールしたルートディレクトリ]
 cp -R hardhat/typechain/* frontend/src/typechain/
 ```
 
-## Frontend, Webサーバーの準備
+### Frontend　Webサーバーの準備
 ```
 $ cd frontend
 $ npm start
 ```
 
-# Hardhat, test 方法
+## Hardhat　テスト方法
 ```
 cd hardhat
 npx hardhat test
