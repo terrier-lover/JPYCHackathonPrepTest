@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "homepage": "https://terrier-lover.github.io/jpyc_hack_prep_test_page/",
   "private": true,
   "dependencies": {
     "@3rdweb/hooks": "^1.9.2",
@@ -31,7 +32,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

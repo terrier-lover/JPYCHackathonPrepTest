@@ -119,7 +119,7 @@ function QuestionConfirmationRow({
                     {answer ?? "未回答"}
                 </Text>
             </Td>
-            <Td><Link onClick={onLinkClick}>修正する</Link></Td>
+            <Td><Link onClick={onLinkClick}>修正</Link></Td>
         </Tr>
     );
 }

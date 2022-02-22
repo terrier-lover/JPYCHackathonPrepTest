@@ -1,8 +1,9 @@
 import { Text, Container, HStack, VStack, Button, Tooltip } from "@chakra-ui/react";
-import { useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import CertificationCard from "./CertificationCard";
 import QuizState from "./QuizState";
 import { useQuizStateContext, DEFAULT_QUESTION_ID } from "./QuizStateContextProvider";
+import { useWalletContext } from "./WalletContextProvider";
 
 export default function QuizTop() {
   return (
@@ -14,30 +15,21 @@ export default function QuizTop() {
         height="100%"
         justify="space-evenly"
       >
-        <Container>
-          <Text
-            fontWeight="extrabold"
-            color="white"
-            fontSize="5xl"
-            display="block"
-            align="center"
-            textShadow="0 0 5px #0972AF"
-          >
+        <Container marginBottom="16px">
+          <TestTitleText>
             日本円ハッカソン
-          </Text>
-          <Text
-            marginTop={-4}
-            fontWeight="extrabold"
-            color="white"
-            fontSize="5xl"
-            display="block"
-            align="center"
-            textShadow="0 0 5px #0972AF"
-          >
+          </TestTitleText>
+          <TestTitleText>
             事前テスト
-          </Text>
+          </TestTitleText>
         </Container>
-        <Text color="white" fontSize="lg" display="block" textShadow="0 0 5px #0972AF">
+        <Text 
+          color="white" 
+          fontFamily="sans-serif" 
+          fontSize="lg" 
+          display="block" 
+          textShadow="0 0 5px #0972AF"
+        >
           ハッカソン参加のためには合格証が必要になります。テストに合格すると合格証が授与されます。Metamask Wallet をお繋ぎになり、Rinkeby Test Network を選択してください。合格後、お繋ぎ頂いた Wallet 宛に合格証が発行されます。
         </Text>
         <HStack justify="center">
@@ -50,6 +42,7 @@ export default function QuizTop() {
 
 function StartButton() {
   const { setCurrentQuizState, setCurrentQuestionID } = useQuizStateContext();
+  const { currentAddress } = useWalletContext();
 
   const onStartClick = useCallback(() => {
     setCurrentQuizState(QuizState.QUESTIONS);
@@ -58,7 +51,7 @@ function StartButton() {
 
   return (
     <StartButtonBase
-      isAddressEmpty={false}
+      isAddressEmpty={currentAddress == null}
       onStartClick={onStartClick}
     />
   );
@@ -75,7 +68,7 @@ function StartButtonBase({
     <Tooltip label="右上のボタンよりWalletに接続してください" isDisabled={!isAddressEmpty}>
       <span>
         <Button
-          marginTop="12px"
+          marginTop="24px"
           bgGradient="linear(to-r, #865325, #b3671f)"
           color="#ffffff"
           size="lg"
@@ -92,5 +85,21 @@ function StartButtonBase({
         </Button>
       </span>
     </Tooltip>
+  );
+}
+
+function TestTitleText({ children }: { children: ReactNode }) {
+  return (
+    <Text
+      fontFamily="sans-serif"
+      fontWeight="extrabold"
+      color="white"
+      fontSize="4xl"
+      display="block"
+      align="center"
+      textShadow="0 0 5px #0972AF"
+    >    
+      {children}
+    </Text>
   );
 }

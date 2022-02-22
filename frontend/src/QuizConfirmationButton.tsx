@@ -67,7 +67,7 @@ export default function QuizConfirmationButton() {
         return () => {
             jpycQuiz.removeListener(eventKey, listener);
         };
-    }, [jpycQuiz, queryClient, setCurrentQuizState, toast]);
+    }, [jpycQuiz, queryClient, setCurrentQuizState, toast, setCurrentQuestionID]);
 
     const {
         isLoading: isMutationLoading,

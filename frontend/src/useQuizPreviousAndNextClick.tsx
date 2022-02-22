@@ -10,7 +10,7 @@ export default function useQuizPreviousAndNextClick() {
         setCurrentQuestionID 
     } = useQuizStateContext();
     const { questionSize } = useQuizDetailsContext();
-    console.log({currentQuestionID});
+
     const progressValue = (currentQuestionID - 1) / questionSize * 100;
 
     const onPreviousClick = useCallback(() => {

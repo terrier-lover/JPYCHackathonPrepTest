@@ -174,7 +174,6 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
             emptyAnswers={memoizedEmptyAnswers}
             questions={memoizedQuestions}
             isUserPassed={isUserPassed ?? false}
-            key={`QuizDetailsContextProvider-${currentAddress}`}
         >
             {children}
         </QuizDetailsContextProvider>

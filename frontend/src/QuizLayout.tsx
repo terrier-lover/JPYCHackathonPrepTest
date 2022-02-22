@@ -20,7 +20,7 @@ export default function QuizLayout({ children }: { children: ReactNode }) {
         height="100vh"
         minHeight="600px"
         style={{
-          backgroundImage: "url(backgroundImageMin.jpg)",
+          backgroundImage: `url(${process.env.PUBLIC_URL}/backgroundImageMin.jpg)`,
           backgroundSize: "100% 100%",
           backgroundRepeat: "no-repeat",
           backgroundPositionY: "bottom"

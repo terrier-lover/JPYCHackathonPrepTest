@@ -31,7 +31,6 @@ export default function QuizComponentAnimatePresense({
 }: {
     children: ReactNode,
 }) {
-    const { currentAddress } = useWalletContext();
     const { currentQuizState } = useQuizStateContext();
 
     return (
@@ -41,7 +40,7 @@ export default function QuizComponentAnimatePresense({
                     width: "100%",
                     height: "100%",
                 }}
-                key={`quizComponent-${currentQuizState}-${currentAddress ?? 'empty'}`}
+                key={`quizComponent-${currentQuizState}`}
                 initial="initial"
                 animate="in"
                 exit="out"

@@ -19,7 +19,8 @@ export default function QuizCompleted() {
                 <Text
                     fontWeight="extrabold"
                     color="#EEC465"
-                    fontSize="4xl"
+                    fontSize="3xl"
+                    fontFamily="sans-serif"
                     display="block"
                     align="center"
                     textShadow="0 0 5px #95632E"
@@ -34,7 +35,7 @@ export default function QuizCompleted() {
                     display="block"
                     textShadow="0 0 5px #0972AF"
                 >
-                    事前テストの合格点を超えたため、合格書を発行します。
+                    事前テストの合格点を超えたため、合格証を発行します。
                 </Text>
                 <Center paddingTop="60px">
                     <Link
