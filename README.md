@@ -110,8 +110,8 @@ $ npx hardhat run scripts/deploy.ts --network localhost
 hardhat/typechain/ 以下のファイルを frontend/src/typechain/ にコピーしてください。
 
 ```
-cd [本ソースコードをインストールしたルートディレクトリ]
-cp -R hardhat/typechain/* frontend/src/typechain/
+$ cd [本ソースコードをインストールしたルートディレクトリ]
+$ cp -R hardhat/typechain/* frontend/src/typechain/
 ```
 
 ### Frontend　Webサーバーの準備
@@ -122,6 +122,6 @@ $ npm start
 
 ## Hardhat　テスト方法
 ```
-cd hardhat
-npx hardhat test
+$ cd hardhat
+$ npx hardhat test
 ```
