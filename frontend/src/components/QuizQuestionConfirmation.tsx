@@ -2,12 +2,12 @@ import { Table, Thead, Tr, Th, Tbody, Center, Link, Td, Text, usePrevious } from
 import { useCallback, useEffect } from "react";
 import CommonErrorBoundary from "./CommonErrorBoundary";
 import QuizConfirmationButton from "./QuizConfirmationButton";
-import { getContracts } from "./QuizContractsUtils";
-import { AnswerType, QuestionType, useQuizDetailsContext } from "./QuizDetailsContextProvider";
+import { getContracts } from "../utils/QuizContractsUtils";
+import { AnswerType, QuestionType, useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
 import QuizQuestionBase from "./QuizQuestionBase";
-import QuizState from "./QuizState";
-import { useQuizStateContext } from "./QuizStateContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
+import QuizState from "../utils/QuizState";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
+import { useWalletContext } from "../contexts/WalletContextProvider";
 
 export default function QuizQuestionConfirmation() {
     const { setCurrentQuizState } = useQuizStateContext();

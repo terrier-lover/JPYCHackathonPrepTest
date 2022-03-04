@@ -1,4 +1,4 @@
-import type { JPYCQuiz } from "./typechain";
+import type { JPYCQuiz } from "../typechain";
 
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
@@ -8,11 +8,11 @@ import {
     MUTTION_KEY_GET_SET_USER_ANSWER_HASHES,
     notEmpty,
     QUERY_KEY_GET_IS_USER_PASSED
-} from "./QuizContractsUtils";
-import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
+} from "../utils/QuizContractsUtils";
+import { useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
 import { useToast } from '@chakra-ui/react';
-import { DEFAULT_QUESTION_ID, useQuizStateContext } from "./QuizStateContextProvider";
-import QuizState from "./QuizState";
+import { DEFAULT_QUESTION_ID, useQuizStateContext } from "../contexts/QuizStateContextProvider";
+import QuizState from "../utils/QuizState";
 
 
 export default function QuizConfirmationButton(

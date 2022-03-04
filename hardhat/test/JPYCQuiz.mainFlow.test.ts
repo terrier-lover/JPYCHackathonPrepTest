@@ -14,7 +14,6 @@ import {
   testGetNFT
 } from "./shared/utils";
 import { makeQuizQuestions, makeSelectionInfo } from "./shared/fixtures";
-import sinon from "sinon";
 
 const createFixtureLoader = waffle.createFixtureLoader;
 

@@ -4,9 +4,9 @@ import {
     DEFAULT_RETRY,
     getContracts,
     QUERY_KEY_GET_TOKEN_URI_FOR_INTER,
-} from "./QuizContractsUtils";
-import { useWalletContext } from "./WalletContextProvider";
-import FallbackCard from "./certification.svg";
+} from "../utils/QuizContractsUtils";
+import { useWalletContext } from "../contexts/WalletContextProvider";
+import FallbackCard from "../misc/certification.svg";
 import { Skeleton } from "@chakra-ui/react";
 import { utils } from "ethers"; 
 

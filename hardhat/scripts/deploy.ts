@@ -143,7 +143,6 @@ async function main() {
       selection.selectionLabels,
       selection.selectionIDs,
       selection.solutionHash,
-      selection.useBinarySelections
     );
     await tx.wait();
   }

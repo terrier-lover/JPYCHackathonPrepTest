@@ -1,4 +1,4 @@
-import Card from "./certification.svg";
+import Card from "../misc/certification.svg";
 import { Center, Text } from '@chakra-ui/react'
 
 export default function CertificationCard() {

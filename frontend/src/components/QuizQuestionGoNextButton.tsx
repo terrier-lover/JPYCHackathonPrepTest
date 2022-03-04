@@ -1,7 +1,7 @@
 import QuizActionButton from "./QuizActionButton";
-import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
-import { useQuizStateContext } from "./QuizStateContextProvider";
-import useQuizPreviousAndNextClick from "./useQuizPreviousAndNextClick";
+import { useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
+import useQuizPreviousAndNextClick from "../hooks/useQuizPreviousAndNextClick";
 
 export default function QuizQuestionGoNextButton() {
     const { 

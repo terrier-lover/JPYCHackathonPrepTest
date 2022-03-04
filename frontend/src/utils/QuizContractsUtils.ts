@@ -2,13 +2,13 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 import type {
     JPYCQuiz as JPYCQuizType,
     JPYCQuizRewardNFT as JPYCQuizRewardNFTType,
-} from "./typechain";
+} from "../typechain";
 
 import { getContractAddress } from "./DefaultSettings";
 import {
     JPYCQuiz__factory as JPYCQuizFactory,
     JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
-} from './typechain';
+} from '../typechain';
 import { ethers } from 'ethers';
 
 const QUERY_KEY_GET_QUIZ_EVENT = 'QUERY_KEY_GET_QUIZ_EVENT';

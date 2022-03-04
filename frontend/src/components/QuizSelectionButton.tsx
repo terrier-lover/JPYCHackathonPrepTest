@@ -1,8 +1,8 @@
 import { Button } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
-import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
+import { useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
 import { CheckIcon } from "@chakra-ui/icons";
-import { useQuizStateContext } from "./QuizStateContextProvider";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
 
 export default function QuizSelectionButton({
     children,

@@ -1,9 +1,9 @@
 import { Text, Container, HStack, VStack, Button, Tooltip } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
 import CertificationCard from "./CertificationCard";
-import QuizState from "./QuizState";
-import { useQuizStateContext, DEFAULT_QUESTION_ID } from "./QuizStateContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
+import QuizState from "../utils/QuizState";
+import { useQuizStateContext, DEFAULT_QUESTION_ID } from "../contexts/QuizStateContextProvider";
+import { useWalletContext } from "../contexts/WalletContextProvider";
 
 export default function QuizTop() {
   return (

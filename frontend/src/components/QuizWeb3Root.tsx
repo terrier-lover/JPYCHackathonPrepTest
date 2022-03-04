@@ -1,8 +1,8 @@
 import { usePrevious } from "@chakra-ui/react";
 import { useEffect } from "react";
 import QuizRoot from "./QuizRoot";
-import { QuizStateContextProvider } from "./QuizStateContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
+import { QuizStateContextProvider } from "../contexts/QuizStateContextProvider";
+import { useWalletContext } from "../contexts/WalletContextProvider";
 
 export default function QuizWeb3Root() {
     const { currentAddress } = useWalletContext();

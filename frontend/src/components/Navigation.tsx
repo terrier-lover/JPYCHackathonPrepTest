@@ -1,7 +1,7 @@
 import { HStack, Link } from "@chakra-ui/react";
 import { useCallback } from "react";
-import QuizState from "./QuizState";
-import { useQuizStateContext } from "./QuizStateContextProvider";
+import QuizState from "../utils/QuizState";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
 
 function NavLink({
   text,

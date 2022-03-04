@@ -1,5 +1,5 @@
-import ThirdwebProviderWrapper from "./ThirdwebProviderWrapper";
-import { WalletContextProvider } from "./WalletContextProvider";
+import ThirdwebProviderWrapper from "../contexts/ThirdwebProviderWrapper";
+import { WalletContextProvider } from "../contexts/WalletContextProvider";
 import QuizWeb3Root from "./QuizWeb3Root";
 import { ReactNode } from "react";
 import { useMediaQuery } from '@chakra-ui/react';

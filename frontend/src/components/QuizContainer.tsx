@@ -1,8 +1,8 @@
-import { AnswerType, QuestionType, QuizDetailsContextProvider } from "./QuizDetailsContextProvider";
+import { AnswerType, QuestionType, QuizDetailsContextProvider } from "../contexts/QuizDetailsContextProvider";
 
 import CommonAlert from "./CommonAlert";
 import { Center, Spinner } from "@chakra-ui/react";
-import { useWalletContext } from "./WalletContextProvider";
+import { useWalletContext } from "../contexts/WalletContextProvider";
 import nullthrows from "nullthrows";
 import { useQueries } from "react-query";
 import { 
@@ -12,10 +12,10 @@ import {
     QUERY_KEY_GET_IS_USER_PASSED, 
     QUERY_KEY_GET_QUESTION_INFO, 
     notEmpty,
-} from "./QuizContractsUtils";
+} from "../utils/QuizContractsUtils";
 import { ReactNode, useEffect, useMemo, useRef } from "react";
-import { useQuizStateContext } from "./QuizStateContextProvider";
-import QuizState from "./QuizState";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
+import QuizState from "../utils/QuizState";
 
 export default function QuizContainer({ children }: { children: ReactNode }) {
     const { currentAddress } = useWalletContext();

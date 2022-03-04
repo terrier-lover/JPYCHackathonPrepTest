@@ -40,7 +40,6 @@ function makeQuestionSelection(
         selectionIDs,
         solutionHash,
         solutionIndex,
-        useBinarySelections: true,
     };
 }
 

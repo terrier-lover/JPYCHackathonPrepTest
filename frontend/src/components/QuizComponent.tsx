@@ -1,8 +1,8 @@
-import QuizState from "./QuizState";
+import QuizState from "../utils/QuizState";
 import QuizTop from "./QuizTop";
 import QuizQuestion from "./QuizQuestion";
 import QuizCompleted from "./QuizCompleted";
-import { useQuizStateContext } from "./QuizStateContextProvider";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
 import QuizComponentAnimatePresense from "./QuizComponentAnimatePresense";
 import CommonErrorBoundary from "./CommonErrorBoundary";
 

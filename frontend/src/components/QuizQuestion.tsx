@@ -1,9 +1,9 @@
 import { Text, Center, SimpleGrid } from "@chakra-ui/react";
-import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
+import { useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
 import QuizSelectionButton from "./QuizSelectionButton";
 import QuizQuestionConfirmation from "./QuizQuestionConfirmation";
 import QuizQuestionBase from "./QuizQuestionBase";
-import { useQuizStateContext } from "./QuizStateContextProvider";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
 import QuizQuestionGoNextButton from "./QuizQuestionGoNextButton";
 
 function appendQuestionPrefix(question: string, currentQuestionID: number) {

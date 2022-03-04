@@ -9,7 +9,13 @@ import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {IJPYCQuizRewardNFT} from "./JPYCQuizRewardNFT.sol";
 
 contract JPYCQuiz is Ownable {
-    using SafeMath for uint256;
+    error QuestionIDShouldBeNonZero();
+    error MinNumOfPassesShouldBeNonZero();
+    error QuestionSelectionsNumberShouldMatch();
+    error MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(uint256 numOfQuestions);
+    error AnswerNumberDoesNotMatch();
+    error IsUserAlreadyPassed(address sender);
+
     using Counters for Counters.Counter;
 
     event LogSetQuestionInfo(uint256 indexed questionId_);
@@ -22,7 +28,6 @@ contract JPYCQuiz is Ownable {
         string[] selectionLabels;
         string[] selectionIDs;
         string solutionHash; // Store solution in a hash format
-        bool useBinarySelections;
     }
 
     struct QuizEvent {
@@ -43,11 +48,11 @@ contract JPYCQuiz is Ownable {
         string[] hashes; // Store answers in a hash format
     }
 
-    // First map: user address to map of second map
-    // Second map: event versionID to user answer history
+    // User address to event versionID to user answer history
     mapping(address => mapping(uint256 => UserAnswerHistory)) _userAnserStatusMap;
     QuizEvent public _quizEvent;
     IJPYCQuizRewardNFT public _mintRewardContract;
+    // Initial value is 0. But the actual version starts from 1.
     Counters.Counter private _eventVersionID;
 
     constructor(address mintRewardContract_) {
@@ -77,18 +82,24 @@ contract JPYCQuiz is Ownable {
             uint256 questionID,
             string memory question,
             string[] memory selectionLabels,
-            string[] memory selectionIDs,
-            bool useBinarySelections
+            string[] memory selectionIDs
         )
     {
+        if (questionID_ == 0) {
+            revert QuestionIDShouldBeNonZero();
+        }
+
+        // questionID_ will never be less than or equals to 0
+        unchecked {
+            questionID_ -= 1;
+        }
         QuestionInfo memory questionInfo = _quizEvent.questionsInfo[
-            questionID_.sub(1)
+            questionID_
         ];
         questionID = questionInfo.questionID;
         question = questionInfo.question;
         selectionLabels = questionInfo.selectionLabels;
         selectionIDs = questionInfo.selectionIDs;
-        useBinarySelections = questionInfo.useBinarySelections;
     }
 
     function compareStrings(string memory a_, string memory b_)
@@ -96,8 +107,7 @@ contract JPYCQuiz is Ownable {
         pure
         returns (bool)
     {
-        return
-            keccak256(abi.encodePacked(a_)) == keccak256(abi.encodePacked(b_));
+        return getHash(a_) == getHash(b_);
     }
 
     function mintReward(bool isAdmin_) private {
@@ -121,22 +131,27 @@ contract JPYCQuiz is Ownable {
         uint256 questionID_,
         string[] memory selectionLabels_,
         string[] memory selectionIDs_,
-        string memory solutionHash_,
-        bool useBinarySelections_
+        string memory solutionHash_
     ) public onlyOwner {
+        if (questionID_ == 0) {
+            revert QuestionIDShouldBeNonZero();
+        }
+
+        // questionID_ will never be less than or equals to 0
+        unchecked {
+            questionID_ -= 1;
+        }
         QuestionInfo storage questionInfo = _quizEvent.questionsInfo[
-            questionID_.sub(1)
+            questionID_
         ];
-        uint256 selectionSize = selectionLabels_.length;
-        require(
-            selectionIDs_.length == selectionSize,
-            "Number of IDs and labels do not match"
-        );
+
+        if (selectionIDs_.length != selectionLabels_.length) {
+            revert QuestionSelectionsNumberShouldMatch();
+        }
 
         questionInfo.selectionLabels = selectionLabels_;
         questionInfo.solutionHash = solutionHash_;
         questionInfo.selectionIDs = selectionIDs_;
-        questionInfo.useBinarySelections = useBinarySelections_;
 
         emit LogSetQuestionInfo(questionID_);
     }
@@ -145,7 +160,13 @@ contract JPYCQuiz is Ownable {
         public
         onlyOwner
     {
-        _quizEvent.questionsInfo[questionID_.sub(1)].question = question_;
+        if (questionID_ == 0) {
+            revert QuestionIDShouldBeNonZero();
+        }
+
+        unchecked {
+            _quizEvent.questionsInfo[questionID_ - 1].question = question_;
+        }
     }
 
     function setQuizEventAndQuestionsSkelton(
@@ -153,59 +174,80 @@ contract JPYCQuiz is Ownable {
         string[] memory questions_,
         uint256 minNumOfPasses_
     ) public onlyOwner {
-        uint256 sentNumOfQuestions = questions_.length;
-        require(
-            sentNumOfQuestions >= minNumOfPasses_,
-            "minNumOfPasses_ cannot be more than sentNumOfQuestions"
-        );
-        require(minNumOfPasses_ > 0, "minNumOfPasses_ should be more than 0");
+        if (minNumOfPasses_ == 0) {
+            revert MinNumOfPassesShouldBeNonZero();
+        }
 
-        QuestionInfo[] memory questionsInfo = new QuestionInfo[](
-            sentNumOfQuestions
-        );
-        for (uint256 i = 0; i < sentNumOfQuestions; i = i.add(1)) {
-            questionsInfo[i].questionID = i + 1;
-            questionsInfo[i].question = questions_[i];
+        uint256 sentNumOfQuestions = questions_.length;
+        if (sentNumOfQuestions < minNumOfPasses_) {
+            revert MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(sentNumOfQuestions);
         }
 
         _quizEvent.quizName = quizName_;
         _quizEvent.minNumOfPasses = minNumOfPasses_;
         _eventVersionID.increment();
         _quizEvent.versionID = _eventVersionID.current();
-        for (uint256 i = 0; i < sentNumOfQuestions; i = i.add(1)) {
+        for (uint256 i = 0; i < sentNumOfQuestions; ) {
             _quizEvent.questionsInfo.push();
-            _quizEvent.questionsInfo[i] = questionsInfo[i];
+            _quizEvent.questionsInfo[i].questionID = i + 1;
+            _quizEvent.questionsInfo[i].question = questions_[i];
+            unchecked {
+                i++;
+            }
         }
     }
 
-    function getIsUserPassed() public view returns (bool) {
-        return
-            _userAnserStatusMap[_msgSender()][_eventVersionID.current()]
-                .hasSentCorrectAnswer;
+    /**
+     * @dev Return true if user has already passed the exam. 
+     */
+    function getHasUserPassed() public view returns (bool) {
+        address sender = _msgSender();
+        _userAnserStatusMap[sender];
+        uint256 currentEventVersionID = _eventVersionID.current();
+
+        for (uint256 i = 1; i <= currentEventVersionID; ) {
+            if (_userAnserStatusMap[sender][currentEventVersionID].hasSentCorrectAnswer) {
+                return true;
+            }
+            unchecked {
+                i++;
+            }
+        }
+        return false;
     }
 
+    /**
+     * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT. 
+     *      
+     */
     function setUserAnswerHashes(string[] memory answerHashes_) public {
-        require(
-            answerHashes_.length == _quizEvent.questionsInfo.length,
-            "Not enough answers"
-        );
-        require(!getIsUserPassed(), "User already solved this quiz.");
-
-        UserAnswerHistory storage history = _userAnserStatusMap[_msgSender()][
-            _eventVersionID.current()
-        ];
+        if (answerHashes_.length != _quizEvent.questionsInfo.length) {
+            revert AnswerNumberDoesNotMatch();
+        }
+        if (getHasUserPassed()) {
+            revert IsUserAlreadyPassed(_msgSender());
+        }
 
         uint256 numOfCorrectAnswers = 0;
-        for (uint256 i = 0; i < answerHashes_.length; i = i.add(1)) {
+        for (uint256 i = 0; i < answerHashes_.length; ) {
             if (
                 compareStrings(
                     answerHashes_[i],
                     _quizEvent.questionsInfo[i].solutionHash
                 )
             ) {
-                numOfCorrectAnswers = numOfCorrectAnswers.add(1);
+                unchecked {
+                    numOfCorrectAnswers += 1;
+                }
+            }
+            unchecked {
+                i++;
             }
         }
+
+        UserAnswerHistory storage history = _userAnserStatusMap[_msgSender()][
+            _eventVersionID.current()
+        ];
 
         bool hasPassed = numOfCorrectAnswers >= _quizEvent.minNumOfPasses;
         if (hasPassed) {
@@ -244,12 +286,19 @@ contract JPYCQuiz is Ownable {
         UserAnswer[] memory answers = history.answers;
 
         hasPassedList = new bool[](answers.length);
-        for (uint256 i = 0; i < answers.length; i = i.add(1)) {
+        for (uint256 i = 0; i < answers.length; ) {
             hasPassedList[i] = answers[i].hasPassed;
+            unchecked {
+                i++;
+            }
         }
     }
 
     function getCurrentEventVersionID() public view returns (uint256) {
         return _eventVersionID.current();
+    }
+
+    function getHash(string memory str) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(str));
     }
 }

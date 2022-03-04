@@ -6,7 +6,7 @@ import {
     useCallback,
     ReactNode,
 } from "react";
-import QuizState from "./QuizState";
+import QuizState from "../utils/QuizState";
 import { useQuizStateContext } from "./QuizStateContextProvider";
 
 export type AnswerType = {

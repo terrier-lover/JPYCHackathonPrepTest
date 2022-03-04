@@ -1,6 +1,6 @@
 import { ArrowBackIcon, ArrowForwardIcon } from "@chakra-ui/icons";
 import { HStack, IconButton, Progress } from "@chakra-ui/react";
-import useQuizPreviousAndNextClick from "./useQuizPreviousAndNextClick";
+import useQuizPreviousAndNextClick from "../hooks/useQuizPreviousAndNextClick";
 
 export default function QuizProgressBar() {
     const { 

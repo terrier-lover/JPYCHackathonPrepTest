@@ -11,11 +11,21 @@ interface IJPYCQuizRewardNFT {
 }
 
 contract JPYCQuizRewardNFT is ERC721, Ownable {
-    uint256 public _currentTokenId;
-    address public _mintRewardCaller;
+    error InvalidCaller(address mintRewardCaller_);
+    error AlreadyMinted(address destinationAddress_);
+    error TokenDoesNotExist(uint256 tokenId_);
+    error NotMintedYet(uint256 tokenId_);
 
-    // Key: tokenId, Value: user address who initially minted the nft
+    uint256 private constant PREFIX_LEN = 4;
+    uint256 private constant SUFFIX_LEN = 4;
+    uint256 private constant ADDRESS_LEN = 42;
+
+    uint256 private _currentTokenId;
+    address private _mintRewardCaller;
+
+    // tokenId to user address who initially minted the nft
     mapping(uint256 => address) public tokenIDToOriginalMinterMap;
+    // minter address to tokenId
     mapping(address => uint256) public originalMinterToTokenIDMap;
 
     constructor(
@@ -23,7 +33,6 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         string memory symbol_,
         address mintRewardCaller_
     ) ERC721(name_, symbol_) {
-        _currentTokenId = 0;
         _mintRewardCaller = mintRewardCaller_;
     }
 
@@ -32,17 +41,22 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
     }
 
     function mintFromRewardCaller(address destination_) external {
-        require(_msgSender() == _mintRewardCaller, "Invalid caller");
-
-        // Owner can have more than 1 NFT
-        if (owner() != destination_) {
-            require(
-                originalMinterToTokenIDMap[destination_] == 0,
-                "Cannot mint more than 1 NFT per wallet."
-            );
+        if (_msgSender() != _mintRewardCaller) {
+            revert InvalidCaller(_mintRewardCaller);
         }
 
-        _currentTokenId++;
+        // Owner can have more than 1 NFT
+        if (
+            owner() != destination_ 
+            && originalMinterToTokenIDMap[destination_] != 0
+        ) {
+            revert AlreadyMinted(destination_);
+        }
+
+        // It is unlikely that tokenId overflows
+        unchecked {
+            _currentTokenId++;
+        }
         tokenIDToOriginalMinterMap[_currentTokenId] = destination_;
         originalMinterToTokenIDMap[destination_] = _currentTokenId;
         _safeMint(destination_, _currentTokenId);
@@ -58,10 +72,9 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         override
         returns (string memory)
     {
-        require(
-            _exists(tokenId_),
-            "ERC721Metadata: URI query for nonexistent token"
-        );
+        if (!_exists(tokenId_)) {
+            revert TokenDoesNotExist(tokenId_);
+        }
 
         return getTokenURIJson(tokenId_);
     }
@@ -70,8 +83,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         public view 
         returns (string memory) 
     {
-        uint256 tokenId = getTokenIDFromMinter(minterAddress_);
-        return tokenURI(tokenId);
+        return tokenURI(getTokenIDFromMinter(minterAddress_));
     }
 
     function getTokenURIJson(uint256 tokenId_)
@@ -79,14 +91,11 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         view
         returns (string memory)
     {
-        string memory svg = getSVG(tokenId_);
-        bytes memory json = getJsonByte(tokenId_, svg);
-
         return
             string(
                 abi.encodePacked(
                     "data:application/json;base64,",
-                    Base64.encode(json)
+                    Base64.encode(getJsonByte(tokenId_, _getSVG(tokenId_)))
                 )
             );
     }
@@ -108,20 +117,20 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function getSVG(uint256 tokenId_) private view returns (string memory) {
+    function _getSVG(uint256 tokenId_) private view returns (string memory) {
         return
             string(
                 abi.encodePacked(
-                    getSVGRootOpen(),
-                    getSVGMain1(),
-                    getSVGWalletID(tokenId_),
-                    getSVGMain3(),
-                    getSVGRootClose()
+                    _getSVGRootOpen(),
+                    _getSVGMain1(),
+                    _getSVGWalletID(tokenId_),
+                    _getSVGMain3(),
+                    _getSVGRootClose()
                 )
             );
     }
 
-    function getSVGRootOpen() private pure returns (string memory) {
+    function _getSVGRootOpen() private pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -130,11 +139,11 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function getSVGRootClose() private pure returns (string memory) {
+    function _getSVGRootClose() private pure returns (string memory) {
         return "</svg>";
     }
 
-    function getSVGMain1() private pure returns (string memory) {
+    function _getSVGMain1() private pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -151,25 +160,27 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function getSVGWalletID(uint256 tokenID_)
+    function _getSVGWalletID(uint256 tokenID_)
         private
         view
         returns (string memory)
     {
         address originalMinter = tokenIDToOriginalMinterMap[tokenID_];
-        require(originalMinter != address(0), "No original minter address");
+        if (originalMinter == address(0)) {
+            revert NotMintedYet(tokenID_);
+        }
 
         return
             string(
                 abi.encodePacked(
                     '<text font-family="sans-serif" letter-spacing=".02em" fill="url(#d)" font-size="16" x="175" y="413">',
-                    getShortenedWalletID(addressToString(originalMinter)),
+                    _getShortenedWalletID(_addressToString(originalMinter)),
                     "</text>"
                 )
             );
     }
 
-    function getSVGMain3() private pure returns (string memory) {
+    function _getSVGMain3() private pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -182,28 +193,31 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function getShortenedWalletID(string memory address_)
+    function _getShortenedWalletID(string memory address_)
         private
         pure
         returns (string memory)
     {
         uint256 addressSize = bytes(address_).length;
-        uint256 prefixLen = 4;
-        uint256 suffixLen = 4;
-        uint256 addressLen = 42;
 
-        require(addressSize >= (prefixLen + suffixLen), "not correct wallet");
+        require(addressSize >= (PREFIX_LEN + SUFFIX_LEN), "not correct wallet");
 
-        bytes memory prefixBytes = new bytes(prefixLen);
-        bytes memory suffixBytes = new bytes(suffixLen);
-        bytes memory addressInBytes = bytes(address_);
+        bytes memory prefixBytes = new bytes(PREFIX_LEN);
+        bytes memory suffixBytes = new bytes(SUFFIX_LEN);
+        bytes memory addressInBytes = new bytes(ADDRESS_LEN);
 
-        for (uint256 i = 0; i < prefixLen; i++) {
+        for (uint256 i = 0; i < PREFIX_LEN; ) {
             prefixBytes[i] = addressInBytes[i];
+            unchecked {
+                i++;
+            }
         }
 
-        for (uint256 i = 0; i < suffixLen; i++) {
-            suffixBytes[i] = addressInBytes[addressLen - suffixLen + i];
+        for (uint256 i = 0; i < SUFFIX_LEN; ) {
+            suffixBytes[i] = addressInBytes[ADDRESS_LEN - SUFFIX_LEN + i];
+            unchecked {
+                i++;
+            }
         }
 
         return
@@ -216,21 +230,29 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function addressToString(address _addr)
-        public
+    function _addressToString(address addr_)
+        private
         pure
         returns (string memory)
     {
-        bytes32 value = bytes32(uint256(uint160(_addr)));
-        bytes memory alphabet = "0123456789abcdef";
-
-        bytes memory str = new bytes(51);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint256 i = 0; i < 20; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(value[i + 12] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(value[i + 12] & 0x0f))];
+        bytes memory s = new bytes(42);
+        s[0] = "0";
+        s[1] = "x";
+        uint256 inAddress = uint256(uint160(addr_));
+        unchecked {
+            for (uint256 i = 2; i < 42; i += 2) {
+                uint8 b = uint8(inAddress >> (4 * (40 - i)));
+                s[i] = _char(b >> 4);
+                s[i + 1] = _char(b & 0x0f);
+            }
         }
-        return string(str);
+        return string(s);
     }
+
+    function _char(uint8 b_) private pure returns (bytes1 c) {
+        unchecked {
+            if (b_ < 10) return bytes1(b_ + 0x30);
+            else return bytes1(b_ + 0x57);
+        }
+    } 
 }

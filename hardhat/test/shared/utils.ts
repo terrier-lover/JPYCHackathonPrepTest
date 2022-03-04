@@ -62,7 +62,6 @@ async function setQuestionsInfo(
         selectionLabels: string[],
         selectionIDs: string[],
         solutionHash: string,
-        useBinarySelections: boolean,
     }[],
 ) {
     const setQuestions = questionSelections.map(
@@ -72,7 +71,6 @@ async function setQuestionsInfo(
                 selection.selectionLabels,
                 selection.selectionIDs,
                 selection.solutionHash,
-                selection.useBinarySelections,
             );
             return await tx.wait();
         }

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { useQuizDetailsContext } from "./QuizDetailsContextProvider";
-import QuizState from "./QuizState";
-import { DEFAULT_QUESTION_ID, useQuizStateContext } from "./QuizStateContextProvider";
+import { useQuizDetailsContext } from "../contexts/QuizDetailsContextProvider";
+import QuizState from "../utils/QuizState";
+import { DEFAULT_QUESTION_ID, useQuizStateContext } from "../contexts/QuizStateContextProvider";
 
 export default function useQuizPreviousAndNextClick() {
     const { 

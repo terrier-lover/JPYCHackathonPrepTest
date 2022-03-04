@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThirdwebProvider } from "@3rdweb/react";
-import { SUPPORTED_CHAIN_IDS_IN_WEB } from './CustomInputs';
+import { SUPPORTED_CHAIN_IDS_IN_WEB } from '../CustomInputs';
 
 function ThirdwebProviderWrapper(props: {
     children: React.ReactNode,

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";
-import { useQuizStateContext } from "./QuizStateContextProvider";
-import { useWalletContext } from "./WalletContextProvider";
+import { useQuizStateContext } from "../contexts/QuizStateContextProvider";
+import { useWalletContext } from "../contexts/WalletContextProvider";
 
 const CARD_ANIMATION_VARIANTS = {
     initial: {
