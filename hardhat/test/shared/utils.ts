@@ -210,6 +210,9 @@ async function testGetNFT(options: {
     await expect(transaction)
         .to.emit(JPYCQuiz, 'LogUserAnswer')
         .withArgs(connectAsAddress, true);
+    await expect(transaction)
+        .to.emit(JPYCQuiz, 'LogMintReward')
+        .withArgs(connectAsAddress, nextTokenID, false);
 
     const mintedTokenID = (
         await JPYCQuizRewardNFT.connect(connectAs).getTokenIDFromMinter(

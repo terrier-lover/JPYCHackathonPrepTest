@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,14 +7,19 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "base64-sol/base64.sol";
 
 interface IJPYCQuizRewardNFT {
-    function mintFromRewardCaller(address destination_) external;
+    function mintFromRewardCaller(address destination_) external returns(uint256);
 }
 
-contract JPYCQuizRewardNFT is ERC721, Ownable {
+/**
+ * @title Quiz Reward ERC721 compatible NFT
+ * @dev Contains information of NFT which is used for Quiz Reward of JPYC hackathon 2022.
+ */
+contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
     error InvalidCaller(address mintRewardCaller_);
     error AlreadyMinted(address destinationAddress_);
     error TokenDoesNotExist(uint256 tokenId_);
     error NotMintedYet(uint256 tokenId_);
+    error WrongAddressSize();
 
     uint256 private constant PREFIX_LEN = 4;
     uint256 private constant SUFFIX_LEN = 4;
@@ -24,9 +29,9 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
     address private _mintRewardCaller;
 
     // tokenId to user address who initially minted the nft
-    mapping(uint256 => address) public tokenIDToOriginalMinterMap;
+    mapping(uint256 => address) private tokenIDToOriginalMinterMap;
     // minter address to tokenId
-    mapping(address => uint256) public originalMinterToTokenIDMap;
+    mapping(address => uint256) private originalMinterToTokenIDMap;
 
     constructor(
         string memory name_,
@@ -40,7 +45,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         return originalMinterToTokenIDMap[minter_];
     }
 
-    function mintFromRewardCaller(address destination_) external {
+    function mintFromRewardCaller(address destination_) external returns(uint256) {
         if (_msgSender() != _mintRewardCaller) {
             revert InvalidCaller(_mintRewardCaller);
         }
@@ -60,6 +65,8 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
         tokenIDToOriginalMinterMap[_currentTokenId] = destination_;
         originalMinterToTokenIDMap[destination_] = _currentTokenId;
         _safeMint(destination_, _currentTokenId);
+
+        return _currentTokenId;
     }
 
     function setMintRewardCaller(address mintRewardCaller_) public onlyOwner {
@@ -174,7 +181,7 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             string(
                 abi.encodePacked(
                     '<text font-family="sans-serif" letter-spacing=".02em" fill="url(#d)" font-size="16" x="175" y="413">',
-                    _getShortenedWalletID(_addressToString(originalMinter)),
+                    _getShortenedWalletID(originalMinter),
                     "</text>"
                 )
             );
@@ -193,18 +200,14 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
             );
     }
 
-    function _getShortenedWalletID(string memory address_)
+    function _getShortenedWalletID(address address_)
         private
         pure
         returns (string memory)
     {
-        uint256 addressSize = bytes(address_).length;
-
-        require(addressSize >= (PREFIX_LEN + SUFFIX_LEN), "not correct wallet");
-
         bytes memory prefixBytes = new bytes(PREFIX_LEN);
         bytes memory suffixBytes = new bytes(SUFFIX_LEN);
-        bytes memory addressInBytes = new bytes(ADDRESS_LEN);
+        bytes memory addressInBytes = abi.encodePacked(address_);
 
         for (uint256 i = 0; i < PREFIX_LEN; ) {
             prefixBytes[i] = addressInBytes[i];
@@ -228,31 +231,5 @@ contract JPYCQuizRewardNFT is ERC721, Ownable {
                     string(suffixBytes)
                 )
             );
-    }
-
-    function _addressToString(address addr_)
-        private
-        pure
-        returns (string memory)
-    {
-        bytes memory s = new bytes(42);
-        s[0] = "0";
-        s[1] = "x";
-        uint256 inAddress = uint256(uint160(addr_));
-        unchecked {
-            for (uint256 i = 2; i < 42; i += 2) {
-                uint8 b = uint8(inAddress >> (4 * (40 - i)));
-                s[i] = _char(b >> 4);
-                s[i + 1] = _char(b & 0x0f);
-            }
-        }
-        return string(s);
-    }
-
-    function _char(uint8 b_) private pure returns (bytes1 c) {
-        unchecked {
-            if (b_ < 10) return bytes1(b_ + 0x30);
-            else return bytes1(b_ + 0x57);
-        }
     } 
 }

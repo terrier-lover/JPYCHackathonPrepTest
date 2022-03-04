@@ -11,7 +11,7 @@ import {
   deployJPYCQuizRewardNFT,
   setMintRewardCaller,
   setUserAnswerHashesTransaction,
-  testGetNFT
+  testGetNFT,
 } from "./shared/utils";
 import { makeQuizQuestions, makeSelectionInfo } from "./shared/fixtures";
 
@@ -94,7 +94,10 @@ describe("JPYCQuiz.mainFlow.test", () => {
           questionSelections = quizQuestions.questionSelections;
           connectAs = wallets[quizInfo.connectAsWalletIndex];
 
-          await setMintRewardCaller(JPYCQuiz, JPYCQuizRewardNFT);
+          await setMintRewardCaller(
+            JPYCQuiz,
+            JPYCQuizRewardNFT,
+          );
 
           return {
             questions,

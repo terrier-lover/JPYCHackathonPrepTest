@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
@@ -20,7 +19,11 @@ contract JPYCQuiz is Ownable {
 
     event LogSetQuestionInfo(uint256 indexed questionId_);
     event LogUserAnswer(address indexed userAddress_, bool hasPassed_);
-    event LogMintReward(address indexed userAddress_, bool isAdmin_);
+    event LogMintReward(
+        address indexed userAddress_, 
+        uint256 indexed mintedTokenId_, 
+        bool isAdmin_
+    );
 
     struct QuestionInfo {
         uint256 questionID; // QuestionID starts with 1
@@ -111,9 +114,9 @@ contract JPYCQuiz is Ownable {
     }
 
     function mintReward(bool isAdmin_) private {
-        _mintRewardContract.mintFromRewardCaller(_msgSender());
+        uint256 mintedTokenId = _mintRewardContract.mintFromRewardCaller(_msgSender());
 
-        emit LogMintReward(_msgSender(), isAdmin_);
+        emit LogMintReward(_msgSender(), mintedTokenId, isAdmin_);
     }
 
     function ownerMintRewardBypassCheck() public onlyOwner {
@@ -218,7 +221,6 @@ contract JPYCQuiz is Ownable {
 
     /**
      * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT. 
-     *      
      */
     function setUserAnswerHashes(string[] memory answerHashes_) public {
         if (answerHashes_.length != _quizEvent.questionsInfo.length) {
