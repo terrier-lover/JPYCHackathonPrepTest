@@ -11,6 +11,7 @@ import { expect } from "chai";
 import {
     JPYCQuiz__factory as JPYCQuizFactory,
     JPYCQuizRewardNFT__factory as JPYCQuizRewardNFTFactory,
+    JPYCQuizRewardNFTSource__factory as JPYCQuizRewardNFTSourceFactory,
 } from '../../typechain';
 import { getSha256Hash } from '../../utils/QuizUtils';
 
@@ -108,17 +109,34 @@ async function setQuizQuestions(
 async function deployJPYCQuizRewardNFT(
     signer: Signer,
     mintRewardCallerAddress: string,
+    nftSourceAddress: string,
 ) {
     const JPYCQuizRewardNFT = await (
         new JPYCQuizRewardNFTFactory(signer).deploy(
             "JPYC Hackathon NFT",
             "JPYCHACK",
-            mintRewardCallerAddress
+            mintRewardCallerAddress,
+            nftSourceAddress,
         )
     );
     await JPYCQuizRewardNFT.deployed();
 
     return JPYCQuizRewardNFT;
+}
+
+async function deployJPYCQuizRewardNFTSource(
+    signer: Signer,
+    mintRewardCallerAddress: string,
+    nftSourceAddress?: string,
+) {
+    const JPYCQuizRewardNFTSource = await (
+        new JPYCQuizRewardNFTSourceFactory(signer).deploy(
+            mintRewardCallerAddress,
+        )
+    );
+    await JPYCQuizRewardNFTSource.deployed();
+
+    return JPYCQuizRewardNFTSource;
 }
 
 async function deployJPYCQuiz(
@@ -237,4 +255,5 @@ export {
     deployJPYCQuiz,
     setUserAnswerHashesTransaction,
     testGetNFT,
+    deployJPYCQuizRewardNFTSource,
 };

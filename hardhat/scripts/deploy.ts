@@ -10,6 +10,7 @@ import {
   setEnv,
 } from '../utils/QuizUtils';
 import { PATH_TO_FRONTEND_ENV, PATH_TO_QUIZ_INFO_JSON } from '../settings';
+import { deployJPYCQuizRewardNFTSource } from "../test/shared/utils";
 
 /***** Change following values based on the specification of your app *****/
 const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon Certification Test";
@@ -83,7 +84,7 @@ const QUESTION_SELECTIONS_INFO = [
   ),
 ];
 const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = false; // If true, it recreates .env file for front end
-const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = false; // If false, it deploys contracts only
+const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = true; // If false, it deploys contracts only
 /**************************************************************************/
 
 async function main() {
@@ -108,11 +109,16 @@ async function main() {
   const [owner] = await ethers.getSigners();
   console.log(`The address of contract owner: ${owner.address}`);
 
+  const JPYCQuizRewardNFTSource = await deployJPYCQuizRewardNFTSource(
+    owner, 
+    ethers.constants.AddressZero
+  );
   const JPYCQuizRewardNFT = await (
     new JPYCQuizRewardNFTFactory(owner).deploy(
       JPYC_HACHATHON_NFT_NAME,
       JPYC_HACHATHON_NFT_SYMBOL,
-      ethers.constants.AddressZero // Intentionally set zero address when the mintRewardCaller is not ready
+      ethers.constants.AddressZero, // Intentionally set zero address when the mintRewardCaller is not ready
+      JPYCQuizRewardNFTSource.address,
     )
   );
   await JPYCQuizRewardNFT.deployed();
@@ -121,6 +127,11 @@ async function main() {
   const JPYCQuiz = await (new JPYCQuizFactory(owner).deploy(JPYCQuizRewardNFT.address));
   await JPYCQuiz.deployed();
   console.log(`The address of JPYCQuiz contract: ${JPYCQuiz.address}`);
+
+  const setNftSourceCallerTx = await JPYCQuizRewardNFTSource.setNftSourceCaller(
+    JPYCQuizRewardNFT.address
+  );
+  await setNftSourceCallerTx.wait();
 
   const txSetMintRewardCaller = await JPYCQuizRewardNFT.setMintRewardCaller(
     JPYCQuiz.address

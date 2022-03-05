@@ -9,6 +9,7 @@ import { ethers, waffle } from "hardhat";
 import {
   deployJPYCQuiz,
   deployJPYCQuizRewardNFT,
+  deployJPYCQuizRewardNFTSource,
   setMintRewardCaller,
   setUserAnswerHashesTransaction,
   testGetNFT,
@@ -76,11 +77,21 @@ describe("JPYCQuiz.mainFlow.test", () => {
         let connectAs: Signer;
 
         const quizFixtures = async (wallets: Wallet[]) => {
-          const JPYCQuizRewardNFT = await deployJPYCQuizRewardNFT(
-            wallets[0],
+          const JPYCQuizRewardNFTSource = await deployJPYCQuizRewardNFTSource(
+            wallets[0], 
             ethers.constants.AddressZero
           );
+
+          const JPYCQuizRewardNFT = await deployJPYCQuizRewardNFT(
+            wallets[0],
+            ethers.constants.AddressZero,
+            JPYCQuizRewardNFTSource.address,
+          );
           const JPYCQuiz = await deployJPYCQuiz(JPYCQuizRewardNFT, wallets[0]);
+          const setNftSourceCallerTx = await JPYCQuizRewardNFTSource.setNftSourceCaller(
+            JPYCQuizRewardNFT.address
+          );
+          await setNftSourceCallerTx.wait();
 
           const quizQuestions = await makeQuizQuestions({
             JPYCQuiz,
