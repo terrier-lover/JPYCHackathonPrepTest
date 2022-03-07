@@ -45,7 +45,7 @@ function QuizDetailsContainer({ children }: { children: ReactNode }) {
 
     const { jpycQuiz } = getContracts(signer, currentChainId);
     const getQuizEvent = jpycQuiz.getQuizEvent();
-    const getIsUserPassed = jpycQuiz.getIsUserPassed();
+    const getIsUserPassed = jpycQuiz.getHasUserPassed();
 
     const firstResults =
         useQueries([

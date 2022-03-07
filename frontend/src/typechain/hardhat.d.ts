@@ -77,6 +77,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
+      name: "AbstractJPYCQuizAccessControl",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AbstractJPYCQuizAccessControl__factory>;
+    getContractFactory(
+      name: "IJPYCQuizEligibility",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IJPYCQuizEligibility__factory>;
+    getContractFactory(
       name: "JPYCQuiz",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.JPYCQuiz__factory>;
@@ -88,6 +96,14 @@ declare module "hardhat/types/runtime" {
       name: "JPYCQuizRewardNFT",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.JPYCQuizRewardNFT__factory>;
+    getContractFactory(
+      name: "IJPYCQuizRewardNFTSource",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IJPYCQuizRewardNFTSource__factory>;
+    getContractFactory(
+      name: "JPYCQuizRewardNFTSource",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.JPYCQuizRewardNFTSource__factory>;
 
     getContractAt(
       name: "AccessControlUpgradeable",
@@ -170,6 +186,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
     getContractAt(
+      name: "AbstractJPYCQuizAccessControl",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AbstractJPYCQuizAccessControl>;
+    getContractAt(
+      name: "IJPYCQuizEligibility",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IJPYCQuizEligibility>;
+    getContractAt(
       name: "JPYCQuiz",
       address: string,
       signer?: ethers.Signer
@@ -184,6 +210,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.JPYCQuizRewardNFT>;
+    getContractAt(
+      name: "IJPYCQuizRewardNFTSource",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IJPYCQuizRewardNFTSource>;
+    getContractAt(
+      name: "JPYCQuizRewardNFTSource",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.JPYCQuizRewardNFTSource>;
 
     // default types
     getContractFactory(

@@ -6,8 +6,10 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {IJPYCQuizRewardNFT} from "./JPYCQuizRewardNFT.sol";
+import {IJPYCQuizEligibility} from "./IJPYCQuizEligibility.sol";
+import {AbstractJPYCQuizAccessControl} from "./AbstractJPYCQuizAccessControl.sol";
 
-contract JPYCQuiz is Ownable {
+contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessControl {
     error QuestionIDShouldBeNonZero();
     error MinNumOfPassesShouldBeNonZero();
     error QuestionSelectionsNumberShouldMatch();
@@ -54,12 +56,19 @@ contract JPYCQuiz is Ownable {
     // User address to event versionID to user answer history
     mapping(address => mapping(uint256 => UserAnswerHistory)) _userAnserStatusMap;
     QuizEvent public _quizEvent;
-    IJPYCQuizRewardNFT public _mintRewardContract;
     // Initial value is 0. But the actual version starts from 1.
     Counters.Counter private _eventVersionID;
 
-    constructor(address mintRewardContract_) {
-        _mintRewardContract = IJPYCQuizRewardNFT(mintRewardContract_);
+    constructor(address mintRewardContract_) 
+        AbstractJPYCQuizAccessControl(address(0), mintRewardContract_)  
+    {}
+
+    function getQuizEligiblity() external view onlyWhenEligibleTargetExist returns(bool, QuizStatus) {
+        if (getHasUserPassed()) {
+            return (false, QuizStatus.USER_HAS_SOLVED);
+        }
+
+        return IJPYCQuizEligibility(_eligibleTarget).getQuizEligiblity();
     }
 
     function getQuizEvent()
@@ -114,20 +123,15 @@ contract JPYCQuiz is Ownable {
     }
 
     function mintReward(bool isAdmin_) private {
-        uint256 mintedTokenId = _mintRewardContract.mintFromRewardCaller(_msgSender());
+        uint256 mintedTokenId = IJPYCQuizRewardNFT(
+            _eligibleTarget
+        ).mintFromRewardCaller(_msgSender());
 
         emit LogMintReward(_msgSender(), mintedTokenId, isAdmin_);
     }
 
-    function ownerMintRewardBypassCheck() public onlyOwner {
+    function ownerMintRewardBypassCheck() public onlyOwner onlyWhenEligibleTargetExist {
         mintReward(true);
-    }
-
-    function setMintRewardContract(address mintRewardContract_)
-        public
-        onlyOwner
-    {
-        _mintRewardContract = IJPYCQuizRewardNFT(mintRewardContract_);
     }
 
     function setQuestionInfo(
@@ -204,25 +208,13 @@ contract JPYCQuiz is Ownable {
      * @dev Return true if user has already passed the exam. 
      */
     function getHasUserPassed() public view returns (bool) {
-        address sender = _msgSender();
-        _userAnserStatusMap[sender];
-        uint256 currentEventVersionID = _eventVersionID.current();
-
-        for (uint256 i = 1; i <= currentEventVersionID; ) {
-            if (_userAnserStatusMap[sender][currentEventVersionID].hasSentCorrectAnswer) {
-                return true;
-            }
-            unchecked {
-                i++;
-            }
-        }
-        return false;
+        return _userAnserStatusMap[_msgSender()][_eventVersionID.current()].hasSentCorrectAnswer;
     }
 
     /**
      * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT. 
      */
-    function setUserAnswerHashes(string[] memory answerHashes_) public {
+    function setUserAnswerHashes(string[] memory answerHashes_) public onlyWhenEligibleTargetExist {
         if (answerHashes_.length != _quizEvent.questionsInfo.length) {
             revert AnswerNumberDoesNotMatch();
         }

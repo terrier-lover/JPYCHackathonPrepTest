@@ -1,12 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.12;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import "base64-sol/base64.sol";
-import "hardhat/console.sol";
+import {IJPYCQuizEligibility} from "./IJPYCQuizEligibility.sol";
+import {AbstractJPYCQuizAccessControl} from "./AbstractJPYCQuizAccessControl.sol";
 
-interface IJPYCQuizRewardNFTSource {
+import "base64-sol/base64.sol";
+
+interface IJPYCQuizRewardNFTSource is IJPYCQuizEligibility {
     function getTokenURIJson(
         uint256 tokenId_, 
         string memory name_,
@@ -14,32 +15,28 @@ interface IJPYCQuizRewardNFTSource {
     ) external view returns (string memory);
 }
 
-contract JPYCQuizRewardNFTSource is IJPYCQuizRewardNFTSource, Ownable {
-    error InvalidCaller(address nftSourceCaller_);
-
+contract JPYCQuizRewardNFTSource is IJPYCQuizRewardNFTSource, AbstractJPYCQuizAccessControl {
     uint256 private constant PREFIX_LEN = 4;
     uint256 private constant SUFFIX_LEN = 4;
     uint256 private constant ADDRESS_LEN = 42;
 
-    address private _nftSourceCaller;
+    constructor(address nftSourceCaller_) 
+        AbstractJPYCQuizAccessControl(nftSourceCaller_, address(0)) 
+    {}
 
-    constructor(address nftSourceCaller_) {
-        _nftSourceCaller = nftSourceCaller_;
-    }
+    function getQuizEligiblity() external view returns(bool, QuizStatus) {
+        if (!_isEligibleCaller()) {
+            return (false, QuizStatus.INVALID_OPERATION);
+        }        
 
-    function setNftSourceCaller(address nftSourceCaller_) public onlyOwner {
-        _nftSourceCaller = nftSourceCaller_;
+        return (true, QuizStatus.IS_USER_ELIGIBLE);
     }
 
     function getTokenURIJson(
         uint256 tokenId_, 
         string memory name_,
         address originalMinter_
-    ) external view returns (string memory) {
-        if (msg.sender != _nftSourceCaller) {
-            revert InvalidCaller(_nftSourceCaller);
-        }
-
+    ) external view onlyEligibleCaller returns (string memory) {
         return
             string(
                 abi.encodePacked(

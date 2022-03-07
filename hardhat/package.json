@@ -15,6 +15,7 @@
     "@typescript-eslint/parser": "^4.33.0",
     "base64-sol": "^1.1.0",
     "chai": "^4.3.6",
+    "detect-svg": "^0.9.1",
     "dotenv": "^10.0.0",
     "envfile": "^6.17.0",
     "eslint": "^7.32.0",

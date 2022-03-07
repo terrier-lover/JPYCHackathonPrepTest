@@ -12,9 +12,11 @@ import {
   deployJPYCQuizRewardNFTSource,
   setMintRewardCaller,
   setUserAnswerHashesTransaction,
-  testGetNFT,
-} from "./shared/utils";
-import { makeQuizQuestions, makeSelectionInfo } from "./shared/fixtures";
+  makeQuizQuestions, 
+  makeSelectionInfo,
+  QuizStatus
+} from "../utils/QuizUtils";
+import { testGetNFT, testGetQuizEligiblity } from "../utils/QuizTestUtils";
 
 const createFixtureLoader = waffle.createFixtureLoader;
 
@@ -39,7 +41,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
         // => Users should solve all questions
         minNumOfPasses: 2,
         numOfQuestions: 2,
-        connectAsWalletIndex: 2, // wallet=quizTaker1
+        quizTakerIndex: 1, // wallet=quizTaker1
         questionSelectionsInfo: makeSelectionInfo(2),
         useBinarySelections: true,
       },
@@ -48,7 +50,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
         // => Users should solve all questions
         minNumOfPasses: 10,
         numOfQuestions: 10,
-        connectAsWalletIndex: 3, // wallet=quizTaker2
+        quizTakerIndex: 2, // wallet=quizTaker2
         questionSelectionsInfo: makeSelectionInfo(10),
         useBinarySelections: false,
       },
@@ -57,7 +59,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
         // => Users need to pass more than 5 questions
         minNumOfPasses: 5,
         numOfQuestions: 10,
-        connectAsWalletIndex: 2, // wallet=quizTaker1
+        quizTakerIndex: 1, // wallet=quizTaker1
         questionSelectionsInfo: makeSelectionInfo(10),
         useBinarySelections: false,
       },
@@ -74,7 +76,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
           selectionIDs: string[];
           solutionHash: string;
         }[];
-        let connectAs: Signer;
+        let quizTaker: Signer;
 
         const quizFixtures = async (wallets: Wallet[]) => {
           const JPYCQuizRewardNFTSource = await deployJPYCQuizRewardNFTSource(
@@ -88,10 +90,10 @@ describe("JPYCQuiz.mainFlow.test", () => {
             JPYCQuizRewardNFTSource.address,
           );
           const JPYCQuiz = await deployJPYCQuiz(JPYCQuizRewardNFT, wallets[0]);
-          const setNftSourceCallerTx = await JPYCQuizRewardNFTSource.setNftSourceCaller(
+          const setEligibleCallerForNFTSourceTx = await JPYCQuizRewardNFTSource.setEligibleCaller(
             JPYCQuizRewardNFT.address
           );
-          await setNftSourceCallerTx.wait();
+          await setEligibleCallerForNFTSourceTx.wait();
 
           const quizQuestions = await makeQuizQuestions({
             JPYCQuiz,
@@ -103,7 +105,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
           });
           questions = quizQuestions.questions;
           questionSelections = quizQuestions.questionSelections;
-          connectAs = wallets[quizInfo.connectAsWalletIndex];
+          quizTaker = wallets[quizInfo.quizTakerIndex];
 
           await setMintRewardCaller(
             JPYCQuiz,
@@ -113,7 +115,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
           return {
             questions,
             questionSelections,
-            connectAs,
+            quizTaker,
             JPYCQuizRewardNFT,
             JPYCQuiz
           };
@@ -124,7 +126,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
 
           questions = fixtures.questions;
           questionSelections = fixtures.questionSelections;
-          connectAs = fixtures.connectAs;
+          quizTaker = fixtures.quizTaker;
           JPYCQuiz = fixtures.JPYCQuiz;
           JPYCQuizRewardNFT = fixtures.JPYCQuizRewardNFT;
         });
@@ -160,10 +162,19 @@ describe("JPYCQuiz.mainFlow.test", () => {
           });
         });
 
+        it("User is eligible to solve question", async () => {
+          await testGetQuizEligiblity({ 
+            JPYCQuiz, 
+            quizTaker,
+            expectedIsEligible: true, 
+            expectedQuizStatus: QuizStatus.IS_USER_ELIGIBLE 
+          });
+        }); 
+       
         it("get NFT after sending correct answers", async () => {
           const transaction = setUserAnswerHashesTransaction({
             JPYCQuiz,
-            connectAs,
+            quizTaker,
             questionSelectionsInfo: quizInfo.questionSelectionsInfo,
             numOfCorrectAnswers: quizInfo.minNumOfPasses,
           });
@@ -171,20 +182,28 @@ describe("JPYCQuiz.mainFlow.test", () => {
           await testGetNFT({
             JPYCQuiz,
             JPYCQuizRewardNFT,
-            connectAs,
+            quizTaker,
             nextTokenID: 1,
-            transaction: transaction,
+            transaction,
+          });
+
+          // User is no longer eligible to solve quiz
+          await testGetQuizEligiblity({ 
+            JPYCQuiz, 
+            quizTaker,
+            expectedIsEligible: false, 
+            expectedQuizStatus: QuizStatus.USER_HAS_SOLVED 
           });
         });
 
         it("cannot get NFT after sending wrong answers", async () => {
           const transaction = setUserAnswerHashesTransaction({
             JPYCQuiz,
-            connectAs,
+            quizTaker,
             questionSelectionsInfo: quizInfo.questionSelectionsInfo,
             numOfCorrectAnswers: quizInfo.minNumOfPasses - 1,
           });
-          const connectAsAddress = await connectAs.getAddress();
+          const connectAsAddress = await quizTaker.getAddress();
 
           await expect(transaction)
             .to.emit(JPYCQuiz, 'LogUserAnswer')
@@ -195,56 +214,56 @@ describe("JPYCQuiz.mainFlow.test", () => {
           const walletInfo of [
             {
               // Secnario1: Use same wallet -> the second transaction should output error
-              firstConnectAsInd: 1, // wallet=quizTaker1
-              secondConnectAsInd: 1, // wallet=quizTaker1
+              firstQuizTakerInd: 1, // wallet=quizTaker1
+              secondQuizTakerInd: 1, // wallet=quizTaker1
               hasSecondTransactionError: true,
             },
             {
               // Secnario2: Use different wallet -> the second transaction should succeed
-              firstConnectAsInd: 1, // wallet=quizTaker1
-              secondConnectAsInd: 2, // wallet=quizTaker2
+              firstQuizTakerInd: 1, // wallet=quizTaker1
+              secondQuizTakerInd: 2, // wallet=quizTaker2
               hasSecondTransactionError: false,
             },
           ]
         ) {
           describe(
-            `Send answers using ${walletInfo.firstConnectAsInd === walletInfo.secondConnectAsInd ? "same" : "different"} wallet`,
+            `Send answers using ${walletInfo.firstQuizTakerInd === walletInfo.secondQuizTakerInd ? "same" : "different"} wallet`,
             () => {
-              let firstConnectAs: Signer;
-              let secondConnectAs: Signer;
+              let firstQuizTaker: Signer;
+              let secondQuizTaker: Signer;
 
               const firstAndSecondTxFixtures = async (wallets: Wallet[]) => {
-                const firstConnectAs = wallets[walletInfo.firstConnectAsInd];
-                const secondConnectAs = wallets[walletInfo.secondConnectAsInd];
+                const firstQuizTaker = wallets[walletInfo.firstQuizTakerInd];
+                const secondQuizTaker = wallets[walletInfo.secondQuizTakerInd];
 
-                return { firstConnectAs, secondConnectAs };
+                return { firstQuizTaker, secondQuizTaker };
               };
 
               beforeEach('load fixtures', async () => {
                 const fixtures = await loadFixture(firstAndSecondTxFixtures);
 
-                firstConnectAs = fixtures.firstConnectAs;
-                secondConnectAs = fixtures.secondConnectAs;
+                firstQuizTaker = fixtures.firstQuizTaker;
+                secondQuizTaker = fixtures.secondQuizTaker;
               });
 
               it('send two transactions', async () => {
                 const firstTransaction = setUserAnswerHashesTransaction({
                   JPYCQuiz,
-                  connectAs: firstConnectAs,
+                  quizTaker: firstQuizTaker,
                   questionSelectionsInfo: quizInfo.questionSelectionsInfo,
                   numOfCorrectAnswers: quizInfo.minNumOfPasses,
                 });
                 await testGetNFT({
                   JPYCQuiz,
                   JPYCQuizRewardNFT,
-                  connectAs: firstConnectAs,
+                  quizTaker: firstQuizTaker,
                   nextTokenID: 1,
                   transaction: firstTransaction,
                 });
 
                 const secondTransaction = setUserAnswerHashesTransaction({
                   JPYCQuiz,
-                  connectAs: secondConnectAs,
+                  quizTaker: secondQuizTaker,
                   questionSelectionsInfo: quizInfo.questionSelectionsInfo,
                   numOfCorrectAnswers: quizInfo.minNumOfPasses,
                 });
@@ -255,7 +274,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
                   await testGetNFT({
                     JPYCQuiz,
                     JPYCQuizRewardNFT,
-                    connectAs: secondConnectAs,
+                    quizTaker: secondQuizTaker,
                     nextTokenID: 2, // this is 2nd time, so id becomes 2
                     transaction: secondTransaction,
                   });

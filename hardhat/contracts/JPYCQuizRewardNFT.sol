@@ -4,9 +4,10 @@ pragma solidity ^0.8.12;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IJPYCQuizRewardNFTSource} from "./JPYCQuizRewardNFTSource.sol";
-import "hardhat/console.sol";
+import {AbstractJPYCQuizAccessControl} from "./AbstractJPYCQuizAccessControl.sol";
+import {IJPYCQuizEligibility} from "./IJPYCQuizEligibility.sol";
 
-interface IJPYCQuizRewardNFT {
+interface IJPYCQuizRewardNFT is IJPYCQuizEligibility {
     function mintFromRewardCaller(address destination_) external returns(uint256);
 }
 
@@ -14,8 +15,7 @@ interface IJPYCQuizRewardNFT {
  * @title Quiz Reward ERC721 compatible NFT
  * @dev Contains information of NFT which is used for Quiz Reward of JPYC hackathon 2022.
  */
-contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
-    error InvalidCaller(address mintRewardCaller_);
+contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccessControl {
     error AlreadyMinted(address destinationAddress_);
     error TokenDoesNotExist(uint256 tokenId_);
     error NotMintedYet(uint256 tokenId_);
@@ -23,8 +23,6 @@ contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
     error NFTSourceDoesNotExist();
 
     uint256 private _currentTokenId;
-    address private _mintRewardCaller;
-    IJPYCQuizRewardNFTSource private _nftSource;
 
     // tokenId to user address who initially minted the nft
     mapping(uint256 => address) private tokenIDToOriginalMinterMap;
@@ -36,25 +34,35 @@ contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
         string memory symbol_,
         address mintRewardCaller_,
         address nftSource_
-    ) ERC721(name_, symbol_) {
-        _mintRewardCaller = mintRewardCaller_;
-        _nftSource = IJPYCQuizRewardNFTSource(nftSource_);
-    }
+    ) 
+    AbstractJPYCQuizAccessControl(mintRewardCaller_, nftSource_)
+    ERC721(name_, symbol_) 
+    {}
 
     function getTokenIDFromMinter(address minter_) public view returns(uint256) {
         return originalMinterToTokenIDMap[minter_];
     }
 
-    function mintFromRewardCaller(address destination_) external returns(uint256) {
-        if (_msgSender() != _mintRewardCaller) {
-            revert InvalidCaller(_mintRewardCaller);
+    function getQuizEligiblity() external view returns(bool, QuizStatus) {
+        if (!_doesEligibleTargetExist()) {
+            return (false, QuizStatus.QUIZ_NFT_SOURCE_NOT_READY);
         }
 
+        if (!_isEligibleCaller()) {
+            return (false, QuizStatus.QUIZ_NFT_NOT_READY);            
+        }
+
+        // Assume that the original caller is minter
+        if (_minterHasAlreadyMinted(tx.origin)) {
+            return (false, QuizStatus.USER_HAS_MINTED);            
+        }
+
+        return IJPYCQuizRewardNFTSource(_eligibleTarget).getQuizEligiblity();
+    }
+
+    function mintFromRewardCaller(address destination_) external onlyEligibleCaller returns(uint256) {
         // Owner can have more than 1 NFT
-        if (
-            owner() != destination_ 
-            && originalMinterToTokenIDMap[destination_] != 0
-        ) {
+        if (_minterHasAlreadyMinted(destination_)) {
             revert AlreadyMinted(destination_);
         }
 
@@ -69,36 +77,27 @@ contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
         return _currentTokenId;
     }
 
-    function setMintRewardCaller(address mintRewardCaller_) public onlyOwner {
-        _mintRewardCaller = mintRewardCaller_;
-    }
-
-    function setNFTSource(address nftSource_) public onlyOwner {
-        _nftSource = IJPYCQuizRewardNFTSource(nftSource_);
-    }
-
     function tokenURI(uint256 tokenId_)
         public
         view
         override
+        onlyWhenEligibleTargetExist
         returns (string memory)
     {
-        if (_nftSource == IJPYCQuizRewardNFTSource(address(0))) {
-            revert NFTSourceDoesNotExist();
-        }
-        console.log('tokenId_', tokenId_);
         if (!_exists(tokenId_)) {
             revert TokenDoesNotExist(tokenId_);
         }
 
         address originalMinter = tokenIDToOriginalMinterMap[tokenId_];
-        console.log('originalMinter', originalMinter);
         if (originalMinter == address(0)) {
             revert NotMintedYet(tokenId_);
         }
 
-        console.log('getTokenURIJson before');
-        return _nftSource.getTokenURIJson(tokenId_, name(), originalMinter);
+        return IJPYCQuizRewardNFTSource(_eligibleTarget).getTokenURIJson(
+            tokenId_, 
+            name(), 
+            originalMinter
+        );
     }
 
     function getTokenURIForMinter(address minterAddress_) 
@@ -106,5 +105,9 @@ contract JPYCQuizRewardNFT is ERC721, Ownable, IJPYCQuizRewardNFT {
         returns (string memory) 
     {
         return tokenURI(getTokenIDFromMinter(minterAddress_));
+    }
+
+    function _minterHasAlreadyMinted(address minter_) private view returns(bool) {
+        return owner() != minter_ && originalMinterToTokenIDMap[minter_] != 0;       
     }
 }

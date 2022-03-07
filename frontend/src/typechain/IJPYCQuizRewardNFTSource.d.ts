@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -19,10 +18,10 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface IJPYCQuizRewardNFTInterface extends ethers.utils.Interface {
+interface IJPYCQuizRewardNFTSourceInterface extends ethers.utils.Interface {
   functions: {
     "getQuizEligiblity()": FunctionFragment;
-    "mintFromRewardCaller(address)": FunctionFragment;
+    "getTokenURIJson(uint256,string,address)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -30,8 +29,8 @@ interface IJPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "mintFromRewardCaller",
-    values: [string]
+    functionFragment: "getTokenURIJson",
+    values: [BigNumberish, string, string]
   ): string;
 
   decodeFunctionResult(
@@ -39,14 +38,14 @@ interface IJPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "mintFromRewardCaller",
+    functionFragment: "getTokenURIJson",
     data: BytesLike
   ): Result;
 
   events: {};
 }
 
-export class IJPYCQuizRewardNFT extends BaseContract {
+export class IJPYCQuizRewardNFTSource extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -87,31 +86,37 @@ export class IJPYCQuizRewardNFT extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: IJPYCQuizRewardNFTInterface;
+  interface: IJPYCQuizRewardNFTSourceInterface;
 
   functions: {
     getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
-    mintFromRewardCaller(
-      destination_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
+    getTokenURIJson(
+      tokenId_: BigNumberish,
+      name_: string,
+      originalMinter_: string,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
   };
 
   getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
-  mintFromRewardCaller(
-    destination_: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
+  getTokenURIJson(
+    tokenId_: BigNumberish,
+    name_: string,
+    originalMinter_: string,
+    overrides?: CallOverrides
+  ): Promise<string>;
 
   callStatic: {
     getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
-    mintFromRewardCaller(
-      destination_: string,
+    getTokenURIJson(
+      tokenId_: BigNumberish,
+      name_: string,
+      originalMinter_: string,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<string>;
   };
 
   filters: {};
@@ -119,18 +124,22 @@ export class IJPYCQuizRewardNFT extends BaseContract {
   estimateGas: {
     getQuizEligiblity(overrides?: CallOverrides): Promise<BigNumber>;
 
-    mintFromRewardCaller(
-      destination_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    getTokenURIJson(
+      tokenId_: BigNumberish,
+      name_: string,
+      originalMinter_: string,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     getQuizEligiblity(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    mintFromRewardCaller(
-      destination_: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    getTokenURIJson(
+      tokenId_: BigNumberish,
+      name_: string,
+      originalMinter_: string,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
 }

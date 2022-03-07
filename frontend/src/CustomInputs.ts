@@ -1,3 +1,9 @@
+// Link to hackathon main page
+const LINK_HACKATHON_MAIN_PAGE = "https://jpy.design/";
+
+// Link to how-to-test page
+const LINK_HOW_TO_TEST_PAGE = "";
+
 // Set network names used in hardhat
 const NETWORK_NAMES = {
     MAINNET: "mainnet",
@@ -34,4 +40,5 @@ export {
     NETWORK_NAMES,
     CHAIN_IDS,
     SUPPORTED_CHAIN_IDS_IN_WEB,
+    LINK_HACKATHON_MAIN_PAGE,
 };

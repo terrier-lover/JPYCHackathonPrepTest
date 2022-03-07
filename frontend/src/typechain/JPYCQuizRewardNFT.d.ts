@@ -21,44 +21,29 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
   functions: {
-    "_currentTokenId()": FunctionFragment;
-    "_mintRewardCaller()": FunctionFragment;
-    "addressToString(address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
+    "getQuizEligiblity()": FunctionFragment;
     "getTokenIDFromMinter(address)": FunctionFragment;
     "getTokenURIForMinter(address)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "mintFromRewardCaller(address)": FunctionFragment;
     "name()": FunctionFragment;
-    "originalMinterToTokenIDMap(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
-    "setMintRewardCaller(address)": FunctionFragment;
+    "setEligibleCaller(address)": FunctionFragment;
+    "setEligibleTarget(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
-    "tokenIDToOriginalMinterMap(uint256)": FunctionFragment;
     "tokenURI(uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "_currentTokenId",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "_mintRewardCaller",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "addressToString",
-    values: [string]
-  ): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [string, BigNumberish]
@@ -67,6 +52,10 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getQuizEligiblity",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getTokenIDFromMinter",
@@ -85,10 +74,6 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "originalMinterToTokenIDMap",
-    values: [string]
-  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
@@ -107,7 +92,11 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     values: [string, boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "setMintRewardCaller",
+    functionFragment: "setEligibleCaller",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setEligibleTarget",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -115,10 +104,6 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "tokenIDToOriginalMinterMap",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "tokenURI",
     values: [BigNumberish]
@@ -132,22 +117,14 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "_currentTokenId",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "_mintRewardCaller",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "addressToString",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getQuizEligiblity",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -167,10 +144,6 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "originalMinterToTokenIDMap",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -186,7 +159,11 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setMintRewardCaller",
+    functionFragment: "setEligibleCaller",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setEligibleTarget",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -194,10 +171,6 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "tokenIDToOriginalMinterMap",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "tokenURI", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferFrom",
@@ -212,12 +185,16 @@ interface JPYCQuizRewardNFTInterface extends ethers.utils.Interface {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
+    "SetEligibleCaller(address,address)": EventFragment;
+    "SetEligibleTarget(address,address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetEligibleCaller"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetEligibleTarget"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -239,6 +216,20 @@ export type ApprovalForAllEvent = TypedEvent<
 
 export type OwnershipTransferredEvent = TypedEvent<
   [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type SetEligibleCallerEvent = TypedEvent<
+  [string, string] & {
+    previousEligibleCaller_: string;
+    newEligibleCaller_: string;
+  }
+>;
+
+export type SetEligibleTargetEvent = TypedEvent<
+  [string, string] & {
+    previousEligibleTarget_: string;
+    newEligibleTarget_: string;
+  }
 >;
 
 export type TransferEvent = TypedEvent<
@@ -289,15 +280,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   interface: JPYCQuizRewardNFTInterface;
 
   functions: {
-    _currentTokenId(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    _mintRewardCaller(overrides?: CallOverrides): Promise<[string]>;
-
-    addressToString(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -310,6 +292,8 @@ export class JPYCQuizRewardNFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
+
+    getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
     getTokenIDFromMinter(
       minter_: string,
@@ -333,11 +317,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<ContractTransaction>;
 
     name(overrides?: CallOverrides): Promise<[string]>;
-
-    originalMinterToTokenIDMap(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -371,8 +350,13 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMintRewardCaller(
-      mintRewardCaller_: string,
+    setEligibleCaller(
+      newElilgibleCaller_: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setEligibleTarget(
+      newElilgibleTarget_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -382,11 +366,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<[boolean]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
-
-    tokenIDToOriginalMinterMap(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     tokenURI(
       tokenId_: BigNumberish,
@@ -406,12 +385,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
-  _currentTokenId(overrides?: CallOverrides): Promise<BigNumber>;
-
-  _mintRewardCaller(overrides?: CallOverrides): Promise<string>;
-
-  addressToString(_addr: string, overrides?: CallOverrides): Promise<string>;
-
   approve(
     to: string,
     tokenId: BigNumberish,
@@ -424,6 +397,8 @@ export class JPYCQuizRewardNFT extends BaseContract {
     tokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
   getTokenIDFromMinter(
     minter_: string,
@@ -447,11 +422,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   ): Promise<ContractTransaction>;
 
   name(overrides?: CallOverrides): Promise<string>;
-
-  originalMinterToTokenIDMap(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -482,8 +452,13 @@ export class JPYCQuizRewardNFT extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMintRewardCaller(
-    mintRewardCaller_: string,
+  setEligibleCaller(
+    newElilgibleCaller_: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setEligibleTarget(
+    newElilgibleTarget_: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -493,11 +468,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   ): Promise<boolean>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
-
-  tokenIDToOriginalMinterMap(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   tokenURI(tokenId_: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
@@ -514,12 +484,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    _currentTokenId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    _mintRewardCaller(overrides?: CallOverrides): Promise<string>;
-
-    addressToString(_addr: string, overrides?: CallOverrides): Promise<string>;
-
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -532,6 +496,8 @@ export class JPYCQuizRewardNFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    getQuizEligiblity(overrides?: CallOverrides): Promise<[boolean, number]>;
 
     getTokenIDFromMinter(
       minter_: string,
@@ -552,14 +518,9 @@ export class JPYCQuizRewardNFT extends BaseContract {
     mintFromRewardCaller(
       destination_: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<string>;
-
-    originalMinterToTokenIDMap(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -588,8 +549,13 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setMintRewardCaller(
-      mintRewardCaller_: string,
+    setEligibleCaller(
+      newElilgibleCaller_: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setEligibleTarget(
+      newElilgibleTarget_: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -599,11 +565,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<boolean>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
-
-    tokenIDToOriginalMinterMap(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     tokenURI(
       tokenId_: BigNumberish,
@@ -676,6 +637,38 @@ export class JPYCQuizRewardNFT extends BaseContract {
       { previousOwner: string; newOwner: string }
     >;
 
+    "SetEligibleCaller(address,address)"(
+      previousEligibleCaller_?: string | null,
+      newEligibleCaller_?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousEligibleCaller_: string; newEligibleCaller_: string }
+    >;
+
+    SetEligibleCaller(
+      previousEligibleCaller_?: string | null,
+      newEligibleCaller_?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousEligibleCaller_: string; newEligibleCaller_: string }
+    >;
+
+    "SetEligibleTarget(address,address)"(
+      previousEligibleTarget_?: string | null,
+      newEligibleTarget_?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousEligibleTarget_: string; newEligibleTarget_: string }
+    >;
+
+    SetEligibleTarget(
+      previousEligibleTarget_?: string | null,
+      newEligibleTarget_?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousEligibleTarget_: string; newEligibleTarget_: string }
+    >;
+
     "Transfer(address,address,uint256)"(
       from?: string | null,
       to?: string | null,
@@ -696,15 +689,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   };
 
   estimateGas: {
-    _currentTokenId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    _mintRewardCaller(overrides?: CallOverrides): Promise<BigNumber>;
-
-    addressToString(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -717,6 +701,8 @@ export class JPYCQuizRewardNFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getQuizEligiblity(overrides?: CallOverrides): Promise<BigNumber>;
 
     getTokenIDFromMinter(
       minter_: string,
@@ -740,11 +726,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    originalMinterToTokenIDMap(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -778,8 +759,13 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMintRewardCaller(
-      mintRewardCaller_: string,
+    setEligibleCaller(
+      newElilgibleCaller_: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setEligibleTarget(
+      newElilgibleTarget_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -789,11 +775,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    tokenIDToOriginalMinterMap(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     tokenURI(
       tokenId_: BigNumberish,
@@ -814,15 +795,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
   };
 
   populateTransaction: {
-    _currentTokenId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    _mintRewardCaller(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    addressToString(
-      _addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -838,6 +810,8 @@ export class JPYCQuizRewardNFT extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    getQuizEligiblity(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getTokenIDFromMinter(
       minter_: string,
@@ -861,11 +835,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    originalMinterToTokenIDMap(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -899,8 +868,13 @@ export class JPYCQuizRewardNFT extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMintRewardCaller(
-      mintRewardCaller_: string,
+    setEligibleCaller(
+      newElilgibleCaller_: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setEligibleTarget(
+      newElilgibleTarget_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -910,11 +884,6 @@ export class JPYCQuizRewardNFT extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    tokenIDToOriginalMinterMap(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     tokenURI(
       tokenId_: BigNumberish,
