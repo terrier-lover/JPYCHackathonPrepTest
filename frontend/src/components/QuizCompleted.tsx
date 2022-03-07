@@ -1,4 +1,5 @@
 import { Center, Link, Button, HStack, VStack, Text } from "@chakra-ui/react";
+import { LINK_HACKATHON_MAIN_PAGE } from "../CustomInputs";
 import CommonErrorBoundary from "./CommonErrorBoundary";
 import QuizCompletedMintedNFT from "./QuizCompletedMintedNFT";
 
@@ -40,7 +41,7 @@ export default function QuizCompleted() {
                 <Center paddingTop="60px">
                     <Link
                         textDecoration="none"
-                        href="#"
+                        href={LINK_HACKATHON_MAIN_PAGE}
                         _hover={{
                             textDecoration: "none"
                         }}

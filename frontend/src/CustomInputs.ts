@@ -2,7 +2,7 @@
 const LINK_HACKATHON_MAIN_PAGE = "https://jpy.design/";
 
 // Link to how-to-test page
-const LINK_HOW_TO_TEST_PAGE = "";
+const LINK_HOW_TO_TEST_PAGE = "https://github.com/terrier-lover/JPYCHackathonPrepTest/blob/main/HOW_TO_TEST.md";
 
 // Set network names used in hardhat
 const NETWORK_NAMES = {
@@ -41,4 +41,5 @@ export {
     CHAIN_IDS,
     SUPPORTED_CHAIN_IDS_IN_WEB,
     LINK_HACKATHON_MAIN_PAGE,
+    LINK_HOW_TO_TEST_PAGE,
 };
