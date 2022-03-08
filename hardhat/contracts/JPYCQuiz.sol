@@ -58,7 +58,8 @@ contract JPYCQuiz is
     }
 
     // User address to event versionID to user answer history
-    mapping(address => mapping(uint256 => UserAnswerHistory)) private _userAnserStatusMap;
+    mapping(address => mapping(uint256 => UserAnswerHistory))
+        private _userAnserStatusMap;
     QuizEvent private _quizEvent;
     // Initial value is 0. But the actual version starts from 1.
     Counters.Counter private _eventVersionID;
@@ -123,13 +124,13 @@ contract JPYCQuiz is
         selectionIDs = questionInfo.selectionIDs;
     }
 
-    function compareStrings(string memory a_, string memory b_)
-        private
-        pure
-        returns (bool)
-    {
-        return getHash(a_) == getHash(b_);
-    }
+    // function _compareStrings(string memory a_, string memory b_)
+    //     private
+    //     pure
+    //     returns (bool)
+    // {
+    //     return _getHash(a_) == _getHash(b_);
+    // }
 
     function mintReward(bool isAdmin_) private {
         emit LogMintReward(
@@ -243,10 +244,8 @@ contract JPYCQuiz is
         uint256 numOfCorrectAnswers = 0;
         for (uint256 i = 0; i < answerHashes_.length; ) {
             if (
-                compareStrings(
-                    answerHashes_[i],
-                    _quizEvent.questionsInfo[i].solutionHash
-                )
+                _getHash(answerHashes_[i]) ==
+                _getHash(_quizEvent.questionsInfo[i].solutionHash)
             ) {
                 unchecked {
                     numOfCorrectAnswers += 1;
@@ -310,7 +309,7 @@ contract JPYCQuiz is
         return _eventVersionID.current();
     }
 
-    function getHash(string memory str) private pure returns (bytes32) {
+    function _getHash(string memory str) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(str));
     }
 
