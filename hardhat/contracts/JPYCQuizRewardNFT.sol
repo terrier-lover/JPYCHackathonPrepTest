@@ -8,14 +8,20 @@ import {AbstractJPYCQuizAccessControl} from "./AbstractJPYCQuizAccessControl.sol
 import {IJPYCQuizEligibility} from "./IJPYCQuizEligibility.sol";
 
 interface IJPYCQuizRewardNFT is IJPYCQuizEligibility {
-    function mintFromRewardCaller(address destination_) external returns(uint256);
+    function mintFromRewardCaller(address destination_)
+        external
+        returns (uint256);
 }
 
 /**
  * @title Quiz Reward ERC721 compatible NFT
  * @dev Contains information of NFT which is used for Quiz Reward of JPYC hackathon 2022.
  */
-contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccessControl {
+contract JPYCQuizRewardNFT is
+    ERC721,
+    IJPYCQuizRewardNFT,
+    AbstractJPYCQuizAccessControl
+{
     error AlreadyMinted(address destinationAddress_);
     error TokenDoesNotExist(uint256 tokenId_);
     error NotMintedYet(uint256 tokenId_);
@@ -34,33 +40,42 @@ contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccess
         string memory symbol_,
         address mintRewardCaller_,
         address nftSource_
-    ) 
-    AbstractJPYCQuizAccessControl(mintRewardCaller_, nftSource_)
-    ERC721(name_, symbol_) 
+    )
+        AbstractJPYCQuizAccessControl(mintRewardCaller_, nftSource_)
+        ERC721(name_, symbol_)
     {}
 
-    function getTokenIDFromMinter(address minter_) public view returns(uint256) {
+    function getTokenIDFromMinter(address minter_)
+        public
+        view
+        returns (uint256)
+    {
         return originalMinterToTokenIDMap[minter_];
     }
 
-    function getQuizEligiblity() external view returns(bool, QuizStatus) {
-        if (!_doesEligibleTargetExist()) {
+    function getQuizEligiblity() external view returns (bool, QuizStatus) {
+        if (_eligibleTarget == address(0)) {
             return (false, QuizStatus.QUIZ_NFT_SOURCE_NOT_READY);
         }
 
-        if (!_isEligibleCaller()) {
-            return (false, QuizStatus.QUIZ_NFT_NOT_READY);            
+        if (_eligibleCaller != _msgSender()) {
+            return (false, QuizStatus.QUIZ_NFT_NOT_READY);
         }
 
         // Assume that the original caller is minter
         if (_minterHasAlreadyMinted(tx.origin)) {
-            return (false, QuizStatus.USER_HAS_MINTED);            
+            return (false, QuizStatus.USER_HAS_MINTED);
         }
 
         return IJPYCQuizRewardNFTSource(_eligibleTarget).getQuizEligiblity();
     }
 
-    function mintFromRewardCaller(address destination_) external onlyEligibleCaller returns(uint256) {
+    function mintFromRewardCaller(address destination_)
+        external
+        returns (uint256)
+    {
+        _checkDoesEligibleCallerExecute();
+
         // Owner can have more than 1 NFT
         if (_minterHasAlreadyMinted(destination_)) {
             revert AlreadyMinted(destination_);
@@ -81,9 +96,10 @@ contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccess
         public
         view
         override
-        onlyWhenEligibleTargetExist
         returns (string memory)
     {
+        _checkEligibleTargetExist();
+
         if (!_exists(tokenId_)) {
             revert TokenDoesNotExist(tokenId_);
         }
@@ -93,21 +109,27 @@ contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccess
             revert NotMintedYet(tokenId_);
         }
 
-        return IJPYCQuizRewardNFTSource(_eligibleTarget).getTokenURIJson(
-            tokenId_, 
-            name(), 
-            originalMinter
-        );
+        return
+            IJPYCQuizRewardNFTSource(_eligibleTarget).getTokenURIJson(
+                tokenId_,
+                name(),
+                originalMinter
+            );
     }
 
-    function getTokenURIForMinter(address minterAddress_) 
-        external view 
-        returns (string memory) 
+    function getTokenURIForMinter(address minterAddress_)
+        external
+        view
+        returns (string memory)
     {
         return tokenURI(getTokenIDFromMinter(minterAddress_));
     }
 
-    function _minterHasAlreadyMinted(address minter_) private view returns(bool) {
-        return owner() != minter_ && originalMinterToTokenIDMap[minter_] != 0;       
+    function _minterHasAlreadyMinted(address minter_)
+        private
+        view
+        returns (bool)
+    {
+        return owner() != minter_ && originalMinterToTokenIDMap[minter_] != 0;
     }
 }

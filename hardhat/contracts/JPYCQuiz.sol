@@ -68,12 +68,9 @@ contract JPYCQuiz is
         AbstractJPYCQuizAccessControl(address(0), mintRewardContract_)
     {}
 
-    function getQuizEligiblity()
-        external
-        view
-        onlyWhenEligibleTargetExist
-        returns (bool, QuizStatus)
-    {
+    function getQuizEligiblity() external view returns (bool, QuizStatus) {
+        _checkEligibleTargetExist();
+
         if (getHasUserPassed()) {
             return (false, QuizStatus.USER_HAS_SOLVED);
         }
@@ -124,14 +121,6 @@ contract JPYCQuiz is
         selectionIDs = questionInfo.selectionIDs;
     }
 
-    // function _compareStrings(string memory a_, string memory b_)
-    //     private
-    //     pure
-    //     returns (bool)
-    // {
-    //     return _getHash(a_) == _getHash(b_);
-    // }
-
     function mintReward(bool isAdmin_) private {
         emit LogMintReward(
             _msgSender(),
@@ -142,11 +131,8 @@ contract JPYCQuiz is
         );
     }
 
-    function ownerMintRewardBypassCheck()
-        external
-        onlyOwner
-        onlyWhenEligibleTargetExist
-    {
+    function ownerMintRewardBypassCheck() external onlyOwner {
+        _checkEligibleTargetExist();
         mintReward(true);
     }
 
@@ -230,10 +216,9 @@ contract JPYCQuiz is
     /**
      * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT.
      */
-    function setUserAnswerHashes(string[] memory answerHashes_)
-        external
-        onlyWhenEligibleTargetExist
-    {
+    function setUserAnswerHashes(string[] memory answerHashes_) external {
+        _checkEligibleTargetExist();
+
         if (answerHashes_.length != _quizEvent.questionsInfo.length) {
             revert AnswerNumberDoesNotMatch();
         }
@@ -241,7 +226,7 @@ contract JPYCQuiz is
             revert IsUserAlreadyPassed(_msgSender());
         }
 
-        uint256 numOfCorrectAnswers = 0;
+        uint256 numOfCorrectAnswers;
         for (uint256 i = 0; i < answerHashes_.length; ) {
             if (
                 _getHash(answerHashes_[i]) ==

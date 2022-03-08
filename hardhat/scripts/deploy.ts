@@ -14,7 +14,7 @@ import { deployJPYCQuizRewardNFTSource } from "../utils/QuizUtils";
 
 /***** Change following values based on the specification of your app *****/
 const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = true; // If true, it recreates .env file for front end
-const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = false; // If false, it deploys contracts only
+const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = true; // If false, it deploys contracts only
 
 const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon Certification Test";
 const JPYC_HACHATHON_NFT_SYMBOL = "JPYCHACKCERT_TEST";
