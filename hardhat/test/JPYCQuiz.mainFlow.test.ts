@@ -45,24 +45,24 @@ describe("JPYCQuiz.mainFlow.test", () => {
         questionSelectionsInfo: makeSelectionInfo(2),
         useBinarySelections: true,
       },
-      {
-        // Scenario2: number of questions=10, minimum criteria=10
-        // => Users should solve all questions
-        minNumOfPasses: 10,
-        numOfQuestions: 10,
-        quizTakerIndex: 2, // wallet=quizTaker2
-        questionSelectionsInfo: makeSelectionInfo(10),
-        useBinarySelections: false,
-      },
-      {
-        // Scenario3: number of questions=10, minimum criteria=5
-        // => Users need to pass more than 5 questions
-        minNumOfPasses: 5,
-        numOfQuestions: 10,
-        quizTakerIndex: 1, // wallet=quizTaker1
-        questionSelectionsInfo: makeSelectionInfo(10),
-        useBinarySelections: false,
-      },
+      // {
+      //   // Scenario2: number of questions=10, minimum criteria=10
+      //   // => Users should solve all questions
+      //   minNumOfPasses: 10,
+      //   numOfQuestions: 10,
+      //   quizTakerIndex: 2, // wallet=quizTaker2
+      //   questionSelectionsInfo: makeSelectionInfo(10),
+      //   useBinarySelections: false,
+      // },
+      // {
+      //   // Scenario3: number of questions=10, minimum criteria=5
+      //   // => Users need to pass more than 5 questions
+      //   minNumOfPasses: 5,
+      //   numOfQuestions: 10,
+      //   quizTakerIndex: 1, // wallet=quizTaker1
+      //   questionSelectionsInfo: makeSelectionInfo(10),
+      //   useBinarySelections: false,
+      // },
     ]
   ) {
     describe(

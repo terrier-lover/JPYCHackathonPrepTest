@@ -101,7 +101,7 @@ contract JPYCQuizRewardNFT is ERC721, IJPYCQuizRewardNFT, AbstractJPYCQuizAccess
     }
 
     function getTokenURIForMinter(address minterAddress_) 
-        public view 
+        external view 
         returns (string memory) 
     {
         return tokenURI(getTokenIDFromMinter(minterAddress_));

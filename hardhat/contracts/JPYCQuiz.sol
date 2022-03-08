@@ -1,29 +1,33 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.12;
 
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {IJPYCQuizRewardNFT} from "./JPYCQuizRewardNFT.sol";
 import {IJPYCQuizEligibility} from "./IJPYCQuizEligibility.sol";
 import {AbstractJPYCQuizAccessControl} from "./AbstractJPYCQuizAccessControl.sol";
 
-contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessControl {
+contract JPYCQuiz is
+    Ownable,
+    IJPYCQuizEligibility,
+    AbstractJPYCQuizAccessControl
+{
     error QuestionIDShouldBeNonZero();
     error MinNumOfPassesShouldBeNonZero();
     error QuestionSelectionsNumberShouldMatch();
-    error MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(uint256 numOfQuestions);
+    error MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(
+        uint256 numOfQuestions_
+    );
     error AnswerNumberDoesNotMatch();
-    error IsUserAlreadyPassed(address sender);
+    error IsUserAlreadyPassed(address sender_);
 
     using Counters for Counters.Counter;
 
     event LogSetQuestionInfo(uint256 indexed questionId_);
     event LogUserAnswer(address indexed userAddress_, bool hasPassed_);
     event LogMintReward(
-        address indexed userAddress_, 
-        uint256 indexed mintedTokenId_, 
+        address indexed userAddress_,
+        uint256 indexed mintedTokenId_,
         bool isAdmin_
     );
 
@@ -54,16 +58,21 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
     }
 
     // User address to event versionID to user answer history
-    mapping(address => mapping(uint256 => UserAnswerHistory)) _userAnserStatusMap;
-    QuizEvent public _quizEvent;
+    mapping(address => mapping(uint256 => UserAnswerHistory)) private _userAnserStatusMap;
+    QuizEvent private _quizEvent;
     // Initial value is 0. But the actual version starts from 1.
     Counters.Counter private _eventVersionID;
 
-    constructor(address mintRewardContract_) 
-        AbstractJPYCQuizAccessControl(address(0), mintRewardContract_)  
+    constructor(address mintRewardContract_)
+        AbstractJPYCQuizAccessControl(address(0), mintRewardContract_)
     {}
 
-    function getQuizEligiblity() external view onlyWhenEligibleTargetExist returns(bool, QuizStatus) {
+    function getQuizEligiblity()
+        external
+        view
+        onlyWhenEligibleTargetExist
+        returns (bool, QuizStatus)
+    {
         if (getHasUserPassed()) {
             return (false, QuizStatus.USER_HAS_SOLVED);
         }
@@ -71,8 +80,10 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         return IJPYCQuizEligibility(_eligibleTarget).getQuizEligiblity();
     }
 
+    function getIsQuizEnded() external view returns (bool) {}
+
     function getQuizEvent()
-        public
+        external
         view
         returns (
             string memory quizName,
@@ -88,7 +99,7 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
     }
 
     function getQuestionInfo(uint256 questionID_)
-        public
+        external
         view
         returns (
             uint256 questionID,
@@ -97,9 +108,7 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
             string[] memory selectionIDs
         )
     {
-        if (questionID_ == 0) {
-            revert QuestionIDShouldBeNonZero();
-        }
+        _questionIDCheck(questionID_);
 
         // questionID_ will never be less than or equals to 0
         unchecked {
@@ -123,14 +132,20 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
     }
 
     function mintReward(bool isAdmin_) private {
-        uint256 mintedTokenId = IJPYCQuizRewardNFT(
-            _eligibleTarget
-        ).mintFromRewardCaller(_msgSender());
-
-        emit LogMintReward(_msgSender(), mintedTokenId, isAdmin_);
+        emit LogMintReward(
+            _msgSender(),
+            IJPYCQuizRewardNFT(_eligibleTarget).mintFromRewardCaller(
+                _msgSender()
+            ),
+            isAdmin_
+        );
     }
 
-    function ownerMintRewardBypassCheck() public onlyOwner onlyWhenEligibleTargetExist {
+    function ownerMintRewardBypassCheck()
+        external
+        onlyOwner
+        onlyWhenEligibleTargetExist
+    {
         mintReward(true);
     }
 
@@ -139,9 +154,11 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         string[] memory selectionLabels_,
         string[] memory selectionIDs_,
         string memory solutionHash_
-    ) public onlyOwner {
-        if (questionID_ == 0) {
-            revert QuestionIDShouldBeNonZero();
+    ) external onlyOwner {
+        _questionIDCheck(questionID_);
+
+        if (selectionIDs_.length != selectionLabels_.length) {
+            revert QuestionSelectionsNumberShouldMatch();
         }
 
         // questionID_ will never be less than or equals to 0
@@ -152,10 +169,6 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
             questionID_
         ];
 
-        if (selectionIDs_.length != selectionLabels_.length) {
-            revert QuestionSelectionsNumberShouldMatch();
-        }
-
         questionInfo.selectionLabels = selectionLabels_;
         questionInfo.solutionHash = solutionHash_;
         questionInfo.selectionIDs = selectionIDs_;
@@ -164,12 +177,10 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
     }
 
     function setQuestionStatement(uint256 questionID_, string memory question_)
-        public
+        external
         onlyOwner
     {
-        if (questionID_ == 0) {
-            revert QuestionIDShouldBeNonZero();
-        }
+        _questionIDCheck(questionID_);
 
         unchecked {
             _quizEvent.questionsInfo[questionID_ - 1].question = question_;
@@ -180,14 +191,16 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         string memory quizName_,
         string[] memory questions_,
         uint256 minNumOfPasses_
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (minNumOfPasses_ == 0) {
             revert MinNumOfPassesShouldBeNonZero();
         }
 
         uint256 sentNumOfQuestions = questions_.length;
         if (sentNumOfQuestions < minNumOfPasses_) {
-            revert MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(sentNumOfQuestions);
+            revert MinNumOfPassesShouldBeLowerThanOrEqualToNumOfQuestions(
+                sentNumOfQuestions
+            );
         }
 
         _quizEvent.quizName = quizName_;
@@ -196,25 +209,30 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         _quizEvent.versionID = _eventVersionID.current();
         for (uint256 i = 0; i < sentNumOfQuestions; ) {
             _quizEvent.questionsInfo.push();
-            _quizEvent.questionsInfo[i].questionID = i + 1;
             _quizEvent.questionsInfo[i].question = questions_[i];
             unchecked {
+                _quizEvent.questionsInfo[i].questionID = i + 1;
                 i++;
             }
         }
     }
 
     /**
-     * @dev Return true if user has already passed the exam. 
+     * @dev Return true if user has already passed the exam.
      */
     function getHasUserPassed() public view returns (bool) {
-        return _userAnserStatusMap[_msgSender()][_eventVersionID.current()].hasSentCorrectAnswer;
+        return
+            _userAnserStatusMap[_msgSender()][_eventVersionID.current()]
+                .hasSentCorrectAnswer;
     }
 
     /**
-     * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT. 
+     * @dev Set answer hashes send by users. If it exceeds the threshold, mint NFT.
      */
-    function setUserAnswerHashes(string[] memory answerHashes_) public onlyWhenEligibleTargetExist {
+    function setUserAnswerHashes(string[] memory answerHashes_)
+        external
+        onlyWhenEligibleTargetExist
+    {
         if (answerHashes_.length != _quizEvent.questionsInfo.length) {
             revert AnswerNumberDoesNotMatch();
         }
@@ -256,20 +274,20 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         emit LogUserAnswer(_msgSender(), hasPassed);
     }
 
-    function setQuizEnd(bool quizEnded_) public onlyOwner {
+    function setQuizEnd(bool quizEnded_) external onlyOwner {
         _quizEvent.quizEnded = quizEnded_;
     }
 
-    function setQuizName(string memory quizName_) public onlyOwner {
+    function setQuizName(string memory quizName_) external onlyOwner {
         _quizEvent.quizName = quizName_;
     }
 
-    function setMinNumOfPasses(uint256 minNumOfPasses_) public onlyOwner {
+    function setMinNumOfPasses(uint256 minNumOfPasses_) external onlyOwner {
         _quizEvent.minNumOfPasses = minNumOfPasses_;
     }
 
     function getAnswerHistories()
-        public
+        external
         view
         returns (bool hasSentCorrectAnswer, bool[] memory hasPassedList)
     {
@@ -288,11 +306,17 @@ contract JPYCQuiz is Ownable, IJPYCQuizEligibility, AbstractJPYCQuizAccessContro
         }
     }
 
-    function getCurrentEventVersionID() public view returns (uint256) {
+    function getCurrentEventVersionID() external view returns (uint256) {
         return _eventVersionID.current();
     }
 
     function getHash(string memory str) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(str));
+    }
+
+    function _questionIDCheck(uint256 questionID_) private pure {
+        if (questionID_ == 0) {
+            revert QuestionIDShouldBeNonZero();
+        }
     }
 }
