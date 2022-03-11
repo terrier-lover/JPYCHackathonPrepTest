@@ -3,6 +3,9 @@
 ## テストページ
 https://terrier-lover.github.io/jpyc_hack_prep_test_page/
 
+## サンプルデモ
+https://user-images.githubusercontent.com/68787800/157796999-35e28bcc-9c6d-450b-ac1a-876051f696cd.mp4
+
 ## システム概要
 - 構成
   - Web ページ (React, Typescript)
