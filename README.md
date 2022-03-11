@@ -68,7 +68,7 @@ hardhat/.env.example を参照し、以下パラメータを指定してくだ�
 - RINKEBY_PRIVATE_KEY_OTHER1
   - **オプショナル** ユーザーとしてクイズを解くアカウント(EOA)を指定します
 
-### hardhat/scripts/deploy.ts
+### [hardhat/scripts/deploy.ts](https://github.com/terrier-lover/JPYCHackathonPrepTest/blob/main/hardhat/scripts/deploy.ts)
 ソースコード内にクイズ情報等を設定する場所があります。適宜情報をアップデートしてください。
 
 - ``MINIMUM_NUMBER_OF_PASS``: 合格に必要な最低数を指定してください。。この最低数以上の正答でNFTが発行できます。
@@ -97,10 +97,10 @@ deploy.ts ファイルでは ``makeQuestionSelection`` 関数を用いてラベ�
 }
 ```
 
-### hardhat/hardhat.config.ts
+### [hardhat/hardhat.config.ts](https://github.com/terrier-lover/JPYCHackathonPrepTest/blob/main/hardhat/hardhat.config.ts)
 **オプショナル**　Hardhatの設定ファイル。
 
-### frontend/src/CustomInputs.ts
+### [frontend/src/CustomInputs.ts](https://github.com/terrier-lover/JPYCHackathonPrepTest/blob/main/frontend/src/CustomInputs.ts)
 Rinkeby以外のネットワークを利用する場合、以下項目を変更してください。
 - SUPPORTED_CHAIN_IDS_IN_WEB
   - **オプショナル** どのネットワークのチェインIDをサポートするか指定します
