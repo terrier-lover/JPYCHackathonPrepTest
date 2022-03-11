@@ -28,11 +28,9 @@ https://terrier-lover.github.io/jpyc_hack_prep_test_page/
 ### スマートコントラクト
 | 役割           | コントラクト名  |コード行数      |サイズ(KB)      |
 | ------------- | ------------- | -------------|-------------|
-| クイズ問題、ユーザーの回答ステータスの保持等  | JPYCQuiz.sol  | 255          | 11.832 |
-| On-chain NFT の保有等  | JPYCQuizRewardNFT.sol  | 237 |24.499 (\*1) |
-
-(\*1) On-chain にてSVGのコードが含まれており、サイズが大きいです。コントラクトのサイズ上限は 24.576 KB なのでギリギリです（汗）
-NFTのオーナー情報等が JPYCQuizRewardNFT.sol にて保存されるため、サイズ情報ギリギリだと色々と不安があるので、[こちらの情報](https://ethereum.org/en/developers/tutorials/downsizing-contracts-to-fight-the-contract-size-limit/)を参照しつつサイズ縮小に励みます。Static call等の利用を考えてます。
+| クイズ問題、ユーザーの回答ステータスの保持等  | JPYCQuiz.sol  | 354          | 11.124 |
+| NFT  | JPYCQuizRewardNFT.sol  | 135 | 13.291 (\*1) |
+| NFT の SVG データを保有  | JPYCQuizRewardNFTSource.sol  | 150 | 14.435 (\*1) |
 
 
 ### Web ページ

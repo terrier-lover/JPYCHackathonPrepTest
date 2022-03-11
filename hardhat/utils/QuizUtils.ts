@@ -3,7 +3,7 @@ import type {
     JPYCQuiz as JPYCQuizType,
     JPYCQuizRewardNFT as JPYCQuizRewardNFTType,
 } from "../typechain";
-import type {Signer} from "ethers";
+import type { Signer } from "ethers";
 
 import { ethers } from "hardhat";
 import { ulid } from 'ulid';
@@ -81,7 +81,7 @@ async function setQuizEventAndQuestionsSkelton(
     JPYCQuiz: JPYCQuizType,
     quizInfo: {
         quizName: string,
-        questions: string[],
+        numOfQuestions: number,
         minNumOfPasses: number,
     },
 ) {
@@ -96,15 +96,15 @@ function setQuizEventAndQuestionsSkeltonTransaction(
     JPYCQuiz: JPYCQuizType,
     quizInfo: {
         quizName: string,
-        questions: string[],
+        numOfQuestions: number,
         minNumOfPasses: number,
     },
 ) {
-    const { quizName, questions, minNumOfPasses } = quizInfo;
+    const { quizName, numOfQuestions, minNumOfPasses } = quizInfo;
 
     return JPYCQuiz.setQuizEventAndQuestionsSkelton(
         quizName,
-        questions,
+        numOfQuestions,
         minNumOfPasses
     );
 }
@@ -112,6 +112,7 @@ function setQuizEventAndQuestionsSkeltonTransaction(
 async function setQuestionsInfo(
     JPYCQuiz: JPYCQuizType,
     questionSelections: {
+        question: string,
         selectionLabels: string[],
         selectionIDs: string[],
         solutionHash: string,
@@ -121,6 +122,7 @@ async function setQuestionsInfo(
         async (selection, index) => {
             const tx = await JPYCQuiz.setQuestionInfo(
                 index + 1,
+                selection.question,
                 selection.selectionLabels,
                 selection.selectionIDs,
                 selection.solutionHash,
@@ -135,23 +137,23 @@ async function setQuizQuestions(
     JPYCQuiz: JPYCQuizType,
     quizInfo: {
         quizName: string,
-        questions: string[],
+        numOfQuestions: number,
         minNumOfPasses: number,
     },
     questionSelections: {
+        question: string,
         selectionLabels: string[],
         selectionIDs: string[],
         solutionHash: string,
-        useBinarySelections: boolean,
     }[],
 ) {
-    const { quizName, questions, minNumOfPasses } = quizInfo;
+    const { quizName, numOfQuestions, minNumOfPasses } = quizInfo;
 
     await setQuizEventAndQuestionsSkelton(
         JPYCQuiz,
         {
             quizName,
-            questions: questions,
+            numOfQuestions,
             minNumOfPasses: minNumOfPasses,
         },
     );
@@ -179,7 +181,6 @@ async function deployJPYCQuizRewardNFT(
 async function deployJPYCQuizRewardNFTSource(
     signer: Signer,
     mintRewardCallerAddress: string,
-    nftSourceAddress?: string,
 ) {
     const JPYCQuizRewardNFTSource = await (
         new JPYCQuizRewardNFTSourceFactory(signer).deploy(
@@ -192,13 +193,11 @@ async function deployJPYCQuizRewardNFTSource(
 }
 
 async function deployJPYCQuiz(
-    JPYCQuizRewardNFT: JPYCQuizRewardNFTType,
+    JPYCQuizRewardNFTaddress: string,
     signer: Signer,
 ) {
     const JPYCQuiz = await (
-        new JPYCQuizFactory(signer).deploy(
-            JPYCQuizRewardNFT.address
-        )
+        new JPYCQuizFactory(signer).deploy(JPYCQuizRewardNFTaddress)
     );
     await JPYCQuiz.deployed();
 
@@ -260,8 +259,8 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
     return value !== null && value !== undefined;
 }
 
-function makeQuestions(numOfQuestions: number) {
-    return Array.from(Array(numOfQuestions).keys()).map(key => `質問${key}`);
+function makeQuestion(questionID: number) {
+    return `質問${questionID}`;
 }
 
 function makeSelectionLabels(numOfQuestions: number) {
@@ -297,59 +296,66 @@ async function makeQuizQuestions(options: {
         numOfSelections: number,
         solutionIndex: number,
     }[],
-    useBinarySelections: boolean,
 }) {
-    const { 
-        JPYCQuiz, 
-        quizName, 
-        numOfQuestions, 
-        minNumOfPasses, 
+    const {
+        JPYCQuiz,
+        quizName,
+        numOfQuestions,
+        minNumOfPasses,
         questionSelectionsInfo,
-        useBinarySelections,
     } = options;
 
-    const questions = makeQuestions(numOfQuestions);
     await setQuizEventAndQuestionsSkelton(
         JPYCQuiz,
         {
             quizName,
-            questions,
-            minNumOfPasses: minNumOfPasses,
+            numOfQuestions,
+            minNumOfPasses,
         },
     );
 
     const questionSelections = questionSelectionsInfo.map(
-        selectionInfo => {
+        (selectionInfo, index) => {
             const { numOfSelections, solutionIndex } = selectionInfo;
             const selectionIDs = makeSelectionIDs(numOfSelections);
 
             return {
+                question: makeQuestion(index + 1),
                 selectionLabels: makeSelectionLabels(numOfSelections),
                 selectionIDs,
                 solutionHash: getSha256Hash(selectionIDs[solutionIndex]),
-                useBinarySelections,
             };
         },
     );
     await setQuestionsInfo(JPYCQuiz, questionSelections);
 
-    return { questions, questionSelections }
+    return { questionSelections }
 }
+
+async function getQuestionsInfo({ JPYCQuiz }: { JPYCQuiz: JPYCQuizType }) {
+    const quizEvent = await JPYCQuiz.getQuizEvent();
+    const getQuestionInfoList =
+        Array.from(Array(quizEvent.numOfQuestions.toNumber()).keys()).map(
+            async (index) => await JPYCQuiz.getQuestionInfo(index + 1)
+        );
+    return await Promise.all(getQuestionInfoList);
+}
+
 
 // Sync with QuizStatus enum defined in IJPYCQuizEligibility.sol
 enum QuizStatus {
     IS_USER_ELIGIBLE,
     USER_HAS_SOLVED,
     USER_HAS_MINTED,
-    QUIZ_NOT_READY, 
+    QUIZ_NOT_READY,
     QUIZ_NFT_SOURCE_NOT_READY,
     QUIZ_NFT_NOT_READY,
-    INVALID_OPERATION,    
+    INVALID_OPERATION,
 }
 
-export { 
-    makeQuestionSelection, 
-    getSha256Hash, 
+export {
+    makeQuestionSelection,
+    getSha256Hash,
     exportJSONString,
     setEnv,
     notEmpty,
@@ -362,8 +368,9 @@ export {
     deployJPYCQuiz,
     setUserAnswerHashesTransaction,
     deployJPYCQuizRewardNFTSource,
-    makeQuestions, 
-    makeQuizQuestions, 
+    makeQuestion,
+    makeQuizQuestions,
     makeSelectionInfo,
+    getQuestionsInfo,
     QuizStatus,
 };

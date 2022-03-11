@@ -14,83 +14,102 @@ import { deployJPYCQuizRewardNFTSource } from "../utils/QuizUtils";
 
 /***** Change following values based on the specification of your app *****/
 const SHOULD_GENERATE_ENV_FILE_FOR_FRONT_END = true; // If true, it recreates .env file for front end
-const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = true; // If false, it deploys contracts only
+const SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT = false; // If false, it deploys contracts only
+const SHOULD_OUTPUT_QUIZ_INFO = true; // If true, it outputs quiz info in json format
 
-const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon Certification Test";
-const JPYC_HACHATHON_NFT_SYMBOL = "JPYCHACKCERT_TEST";
-const QUIZ_TITLE = "JPYC Hatkachon テスト";
-// The order of JPYC_QUIZ_QUESTIONS is the actual order shown to users.
-const QUESTIONS = [
-  "○ を選択してください。", // Q1
-  "× を選択してください。", // Q2
-  "[長文例] 桜木町の駅に降りたのが、かれこれ九時時分だったので、私達は、先ず暗い波止場に行った。 ○ を選択してください。", // Q3
-  "○ を選択してください。", // Q4
-  "× を選択してください。", // Q5
-  "○ を選択してください。", // Q6
-  "○ を選択してください。", // Q7
-  "○ を選択してください。", // Q8
-  "× を選択してください。", // Q9
-  "× を選択してください。", // Q10
-];
-const MINIMUM_NUMBER_OF_PASS = 7;
+const JPYC_HACHATHON_NFT_NAME = "JPYC Hackathon Certification Test"; // Name used in ERC-721
+const JPYC_HACHATHON_NFT_SYMBOL = "JPYCHACKCERT_TEST"; // Symbol used in ERC-721
+const QUIZ_TITLE = "JPYC Hatkachon テスト"; // Title of the quiz stored in the contract
+const MINIMUM_NUMBER_OF_PASS = 7; // Minimum number of questions for users to get the reward
 const COMMON_SELECTION_LABELS = ["○", "×"];
+// The order of QUESTION_SELECTIONS_INFO is the actual order shown to users.
 const QUESTION_SELECTIONS_INFO = [
   // Question1
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "○ を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    ),
+  },
   // Question2
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    1, // solutionIndex
-  ),
+  {
+    question: "× を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      1, // solutionIndex
+    )
+  },
   // Question3
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "[長文例] 桜木町の駅に降りたのが、かれこれ九時時分だったので、私達は、先ず暗い波止場に行った。 ○ を選択してください。", // Q3,
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    )
+  },
   // Question4
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "○ を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    )
+  },
   // Question5
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    1, // solutionIndex
-  ),
+  {
+    question: "× を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      1, // solutionIndex
+    )
+  },
   // Question6
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "○ を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    )
+  },
   // Question7
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "○ を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    )
+  },
   // Question8
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    0, // solutionIndex
-  ),
+  {
+    question: "○ を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      0, // solutionIndex
+    )
+  },
   // Question9
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    1, // solutionIndex
-  ),
-  // Question9
-  makeQuestionSelection(
-    COMMON_SELECTION_LABELS,
-    1, // solutionIndex
-  ),
+  {
+    question: "× を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      1, // solutionIndex
+    )
+  },
+  // Question10
+  {
+    question: "× を選択してください。",
+    ...makeQuestionSelection(
+      COMMON_SELECTION_LABELS,
+      1, // solutionIndex
+    )
+  },
 ];
 /**************************************************************************/
 
 async function main() {
-  if (QUESTIONS.length !== QUESTION_SELECTIONS_INFO.length) {
-    throw new Error('QUESTIONS and QUESTION_SELECTIONS_INFO should have same length');
+  if (QUESTION_SELECTIONS_INFO.length <= 0) {
+    throw new Error('QUESTION_SELECTIONS_INFO should be more than 0');
   }
 
   console.log(`##### This script deploys contract to ${network.name} with following settings:`);
@@ -99,19 +118,15 @@ async function main() {
   console.log(`QUIZ_TITLE=${QUIZ_TITLE}`);
   console.log('\n');
 
-  const generatedQuestions = QUESTIONS.map((question, index) => {
-    const questionSelection = QUESTION_SELECTIONS_INFO[index];
-    return { question, ...questionSelection };
-  });
-  console.log("##### Quiz information in JSON #####");
-  console.log(JSON.stringify(generatedQuestions));
-  console.log("####################################\n");
+  console.log("##### Quiz information in JSON format #####");
+  console.log(JSON.stringify(QUESTION_SELECTIONS_INFO));
+  console.log("###########################################\n");
 
   const [owner] = await ethers.getSigners();
   console.log(`The address of contract owner: ${owner.address}`);
 
   const JPYCQuizRewardNFTSource = await deployJPYCQuizRewardNFTSource(
-    owner, 
+    owner,
     ethers.constants.AddressZero
   );
   const JPYCQuizRewardNFT = await (
@@ -141,7 +156,7 @@ async function main() {
 
   const txSetQuizEvent = await JPYCQuiz.setQuizEventAndQuestionsSkelton(
     QUIZ_TITLE,
-    QUESTIONS,
+    QUESTION_SELECTIONS_INFO.length,
     MINIMUM_NUMBER_OF_PASS,
   );
   await txSetQuizEvent.wait();
@@ -152,6 +167,7 @@ async function main() {
     const questionID = i + 1;
     const tx = await JPYCQuiz.setQuestionInfo(
       questionID,
+      selection.question,
       selection.selectionLabels,
       selection.selectionIDs,
       selection.solutionHash,
@@ -164,11 +180,13 @@ async function main() {
       return getSha256Hash(selection.selectionIDs[selection.solutionIndex]);
     }
   );
-  console.log(`Completed setting questions! Outputting quiz info into ${PATH_TO_QUIZ_INFO_JSON}`);
-  await exportJSONString(JSON.stringify(generatedQuestions), PATH_TO_QUIZ_INFO_JSON);
+  if (SHOULD_OUTPUT_QUIZ_INFO) {
+    console.log(`Completed setting questions! Outputting quiz info into ${PATH_TO_QUIZ_INFO_JSON}`);
+    await exportJSONString(JSON.stringify(QUESTION_SELECTIONS_INFO), PATH_TO_QUIZ_INFO_JSON);
+  }
 
   if (SHOULD_QUIZ_TAKER_SOLVE_AND_GET_NFT) {
-    const [_, quizTaker1] = await ethers.getSigners();    
+    const [_, quizTaker1] = await ethers.getSigners();
     console.log(`The address of quiz taker: ${quizTaker1.address}`);
 
     console.log('Answering questions...');

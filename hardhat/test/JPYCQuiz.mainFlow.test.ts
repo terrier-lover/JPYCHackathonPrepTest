@@ -7,16 +7,11 @@ import type { Wallet, Signer } from "ethers";
 import { expect } from "chai";
 import { ethers, waffle } from "hardhat";
 import {
-  deployJPYCQuiz,
-  deployJPYCQuizRewardNFT,
-  deployJPYCQuizRewardNFTSource,
-  setMintRewardCaller,
   setUserAnswerHashesTransaction,
-  makeQuizQuestions, 
   makeSelectionInfo,
   QuizStatus
 } from "../utils/QuizUtils";
-import { testGetNFT, testGetQuizEligiblity } from "../utils/QuizTestUtils";
+import { quizCreationFixtures, testGetNFT, testGetQuizEligiblity } from "../utils/QuizTestUtils";
 
 const createFixtureLoader = waffle.createFixtureLoader;
 
@@ -28,6 +23,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
   let quizTaker1: Wallet;
   let quizTaker2: Wallet;
   let otherPerson: Wallet;
+  const ownerWalletIndex = 0;
 
   before(async () => {
     [owner, quizTaker1, quizTaker2, otherPerson] = await (ethers as any).getSigners();
@@ -43,7 +39,6 @@ describe("JPYCQuiz.mainFlow.test", () => {
         numOfQuestions: 2,
         quizTakerIndex: 1, // wallet=quizTaker1
         questionSelectionsInfo: makeSelectionInfo(2),
-        useBinarySelections: true,
       },
       {
         // Scenario2: number of questions=10, minimum criteria=10
@@ -52,7 +47,6 @@ describe("JPYCQuiz.mainFlow.test", () => {
         numOfQuestions: 10,
         quizTakerIndex: 2, // wallet=quizTaker2
         questionSelectionsInfo: makeSelectionInfo(10),
-        useBinarySelections: false,
       },
       {
         // Scenario3: number of questions=10, minimum criteria=5
@@ -61,7 +55,6 @@ describe("JPYCQuiz.mainFlow.test", () => {
         numOfQuestions: 10,
         quizTakerIndex: 1, // wallet=quizTaker1
         questionSelectionsInfo: makeSelectionInfo(10),
-        useBinarySelections: false,
       },
     ]
   ) {
@@ -70,63 +63,28 @@ describe("JPYCQuiz.mainFlow.test", () => {
       () => {
         let JPYCQuiz: JPYCQuizType;
         let JPYCQuizRewardNFT: JPYCQuizRewardNFTType;
-        let questions: string[];
         let questionSelections: {
+          question: string,
           selectionLabels: string[];
           selectionIDs: string[];
           solutionHash: string;
         }[];
         let quizTaker: Signer;
 
-        const quizFixtures = async (wallets: Wallet[]) => {
-          const JPYCQuizRewardNFTSource = await deployJPYCQuizRewardNFTSource(
-            wallets[0], 
-            ethers.constants.AddressZero
+        beforeEach('load quiz fixtures', async () => {
+          const fixtures = await loadFixture(
+            quizCreationFixtures(
+              {
+                ownerWalletIndex,
+                quizTakerWalletIndex: quizInfo.quizTakerIndex,
+              }, 
+              quizName, 
+              quizInfo
+            )
           );
 
-          const JPYCQuizRewardNFT = await deployJPYCQuizRewardNFT(
-            wallets[0],
-            ethers.constants.AddressZero,
-            JPYCQuizRewardNFTSource.address,
-          );
-          const JPYCQuiz = await deployJPYCQuiz(JPYCQuizRewardNFT, wallets[0]);
-          const setEligibleCallerForNFTSourceTx = await JPYCQuizRewardNFTSource.setEligibleCaller(
-            JPYCQuizRewardNFT.address
-          );
-          await setEligibleCallerForNFTSourceTx.wait();
-
-          const quizQuestions = await makeQuizQuestions({
-            JPYCQuiz,
-            quizName,
-            numOfQuestions: quizInfo.numOfQuestions,
-            minNumOfPasses: quizInfo.minNumOfPasses,
-            questionSelectionsInfo: quizInfo.questionSelectionsInfo,
-            useBinarySelections: quizInfo.useBinarySelections,
-          });
-          questions = quizQuestions.questions;
-          questionSelections = quizQuestions.questionSelections;
-          quizTaker = wallets[quizInfo.quizTakerIndex];
-
-          await setMintRewardCaller(
-            JPYCQuiz,
-            JPYCQuizRewardNFT,
-          );
-
-          return {
-            questions,
-            questionSelections,
-            quizTaker,
-            JPYCQuizRewardNFT,
-            JPYCQuiz
-          };
-        }
-
-        beforeEach('load quiz questions fixtures', async () => {
-          const fixtures = await loadFixture(quizFixtures);
-
-          questions = fixtures.questions;
           questionSelections = fixtures.questionSelections;
-          quizTaker = fixtures.quizTaker;
+          quizTaker = fixtures.quizTaker!; // Quiz taker should not be null
           JPYCQuiz = fixtures.JPYCQuiz;
           JPYCQuizRewardNFT = fixtures.JPYCQuizRewardNFT;
         });
@@ -152,7 +110,7 @@ describe("JPYCQuiz.mainFlow.test", () => {
           expect(questionsInfo.length).to.equals(quizInfo.numOfQuestions);
 
           questionsInfo.map((questionInfo, index) => {
-            expect(questionInfo.question).to.equals(questions[index]);
+            expect(questionInfo.question).to.equals(questionSelections[index].question);
             expect(JSON.stringify(questionInfo.selectionLabels)).to.equal(
               JSON.stringify(questionSelections[index].selectionLabels)
             );
