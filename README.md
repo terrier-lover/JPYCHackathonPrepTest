@@ -32,8 +32,8 @@ https://user-images.githubusercontent.com/68787800/157796999-35e28bcc-9c6d-450b-
 | 役割           | コントラクト名  |コード行数      |サイズ(KB)      |
 | ------------- | ------------- | -------------|-------------|
 | クイズ問題、ユーザーの回答ステータスの保持等  | JPYCQuiz.sol  | 354          | 11.124 |
-| NFT  | JPYCQuizRewardNFT.sol  | 135 | 13.291 (\*1) |
-| NFT の SVG データを保有  | JPYCQuizRewardNFTSource.sol  | 150 | 14.435 (\*1) |
+| NFT  | JPYCQuizRewardNFT.sol  | 135 | 13.291 |
+| NFT の SVG データを保有  | JPYCQuizRewardNFTSource.sol  | 150 | 14.435 |
 
 
 ### Web ページ
@@ -46,14 +46,14 @@ https://user-images.githubusercontent.com/68787800/157796999-35e28bcc-9c6d-450b-
   - [ethers](https://www.npmjs.com/package/ethers)
   - [@3rdweb/react](https://www.npmjs.com/package/@3rdweb/react)
 - デザイン
-  - [Chakra UI](https://chakra-ui.com/docs/getting-started) (\*2)
+  - [Chakra UI](https://chakra-ui.com/docs/getting-started) (\*1)
 
-(\*2) @3rdweb/react が Chakra UI を内部で利用してるため、Chakra UIのデザインに従いました
+(\*1) @3rdweb/react が Chakra UI を内部で利用してるため、Chakra UIのデザインに従いました
 
 ## 各種操作情報
 ### ソースコードインストール
 ```
-$ git clone https://github.com/terrier-lover/rewards_distributer.git
+$ git clone https://github.com/terrier-lover/JPYCHackathonPrepTest.git
 ```
 
 ### hardhat/.env
@@ -64,6 +64,35 @@ hardhat/.env.example を参照し、以下パラメータを指定してくだ�
   - **必須項目** コントラクトをデプロイするアカウント(EOA)を指定します
 - RINKEBY_PRIVATE_KEY_OTHER1
   - **オプショナル** ユーザーとしてクイズを解くアカウント(EOA)を指定します
+
+### hardhat/scripts/deploy.ts
+ソースコード内にクイズ情報等を設定する場所があります。適宜情報をアップデートしてください。
+
+- ``MINIMUM_NUMBER_OF_PASS``: 合格に必要な最低数を指定してください。。この最低数以上の正答でNFTが発行できます。
+- ``COMMON_SELECTION_LABELS``: 問題の選択肢として利用されるラベルを指定します。○×問題の場合、``["○", "×"]``と指定してください。
+- ``QUESTION_SELECTIONS_INFO``: クイズの問題と回答を配列内に指定してください。
+個々の問題のデータ形式は以下です。
+```
+{
+  // question, selectionLabels, selectionIDs, solutionHash はブロックチェーンに保存されます
+  question: "○ を選択してください。", // 設問を指定
+  selectionLabels: ["○", "×"], // 回答の選択肢を配列にて指定
+  selectionIDs: ["1298371", "8473629"], // selectionLabelsと同じ数の配列にてユニークなIDを指定
+  solutionHash: e1394801b1c262ed26721fd73b0a8cabac4c99b7d71166c5fc872d2d9fb2598f, // どの選択肢が回答かを指定。コード内では選択肢に該当するユニークIDをsha256関数にてハッシュ化しています。
+  // solutionIndex は deploy.ts のみに利用されます
+  solutionIndex: 0, // どの選択肢が回答かを指定します。
+}
+```
+deploy.ts ファイルでは ``makeQuestionSelection`` 関数を用いてラベル(○×問題の場合は``["○", "×"]``)と
+```
+{
+  question: "○ を選択してください。",
+  ...makeQuestionSelection(
+    COMMON_SELECTION_LABELS, // deploy.ts 内では ``["○", "×"]`` が該当
+    0, // solutionIndex, ○と×のどちらが正答かを指定。0 の場合は ○（マル）が正解、1 の場合は ×（バツ）が正解です。
+  )
+}
+```
 
 ### hardhat/hardhat.config.ts
 **オプショナル**　Hardhatの設定ファイル。
